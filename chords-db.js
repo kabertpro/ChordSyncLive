@@ -1,0 +1,40 @@
+    // Database de Acordes (Notas relativas y posiciones)
+    const db = {
+        "C_major": { guitar: ["x", 3, 2, 0, 1, 0], charango: [0, 0, 0, 3, 0], ukulele: [0, 0, 0, 3], piano: [0, 4, 7] },
+        "C_minor": { guitar: ["x", 3, 5, 5, 4, 3], charango: [5, 3, 3, 3, 3], ukulele: [5, 3, 3, 3], piano: [0, 3, 7] },
+		"C_7": { guitar: ["x", 3, 2, 3, 1, 0], charango: [0, 0, 0, 1, 0], ukulele: [0, 0, 0, 1], piano: [0, 3, 7] },
+        "C#_major": { guitar: ["x", 4, 3, 1, 2, 1], charango: [1, 1, 1, 4, 1], ukulele: [1, 1, 1, 4], piano: [1, 5, 8] },
+        "C#_minor": { guitar: ["x", 4, 6, 6, 5, 4], charango: [6, 4, 4, 4, 4], ukulele: [6, 4, 4, 4], piano: [1, 4, 8] },
+		"C#_7":     { guitar: ["x", 4, 6, 4, 6, 4], charango: [1, 1, 1, 2, 1], ukulele: [1, 1, 1, 2], piano: [1, 5, 8, 11] },
+		
+        "D_major": { guitar: ["x", "x", 0, 2, 3, 2], charango: [2, 2, 2, 0, 2], ukulele: [2, 2, 2, 0], piano: [2, 6, 9] },
+        "D_minor": { guitar: ["x", "x", 0, 2, 3, 1], charango: [2, 2, 1, 0, 1], ukulele: [2, 2, 1, 0], piano: [2, 5, 9] },
+		"D#_major": { guitar: ["x", "x", 1, 3, 2, 3], charango: [0, 3, 3, 1, 3], ukulele: [0, 0, 0, 1], piano: [3, 7, 10] },
+        "D#_minor": { guitar: ["x", "x", 1, 3, 4, 2], charango: [2, 2, 1, 0, 1], ukulele: [2, 2, 1, 0], piano: [3, 6, 10] },
+		"D#_7":     { guitar: ["x", 6, 8, 6, 8, 6], charango: [3, 1, 3, 1, 3], ukulele: [3, 1, 3, 1], piano: [3, 7, 10, 1] },
+		
+        "E_major": { guitar: [0, 2, 2, 1, 0, 0], charango: [4, 4, 4, 2, 0], ukulele: [4, 4, 4, 2], piano: [4, 8, 11] },
+        "E_minor": { guitar: [0, 2, 2, 0, 0, 0], charango: [0, 4, 3, 2, 0], ukulele: [0, 4, 3, 2], piano: [4, 7, 11] },
+		"E_major": { guitar: [0, 2, 0, 1, 0, 0], charango: [4, 4, 4, 2, 0], ukulele: [4, 4, 4, 2], piano: [4, 8, 11] },
+		
+        "F_major": { guitar: [1, 3, 3, 2, 1, 1], charango: [2, 0, 1, 0, 5], ukulele: [2, 0, 1, 0], piano: [5, 9, 12] },
+        "F_minor": { guitar: [1, 3, 3, 1, 1, 1], charango: [1, 0, 1, 3, 1], ukulele: [1, 0, 1, 3], piano: [5, 9, 12] },
+		"F#_major": { guitar: [2, 4, 4, 3, 2, 2], charango: [0, 1, 2, 1, 2], ukulele: [0, 1, 2, 1], piano: [6, 10, 13] },
+		"F#_minor": { guitar: [2, 4, 4, 2, 2, 2], charango: [2, 1, 2, 0, 2], ukulele: [2, 1, 2, 0], piano: [6, 9, 13] },
+		"F#_7":     { guitar: [2, 4, 2, 3, 2, 2], charango: [4, 4, 4, 4, 2], ukulele: [3, 4, 2, 4], piano: [6, 10, 13, 4] },
+		
+        "G_major": { guitar: [3, 2, 0, 0, 0, 3], charango: [0, 2, 3, 2, 3], ukulele: [0, 2, 3, 2], piano: [7, 11, 14] },
+        "G_minor": { guitar: [3, 5, 5, 3, 3, 3], charango: [0, 2, 3, 1, 3], ukulele: [0, 2, 3, 1], piano: [7, 11, 14] },
+		"G#_major": { guitar: [4, 6, 6, 5, 4, 4], charango: [0, 3, 4, 3, 2], ukulele: [0, 3, 4, 3], piano: [8, 12, 15] },
+		"G#_minor": { guitar: [4, 6, 6, 4, 4, 4], charango: [1, 3, 4, 2, 0], ukulele: [1, 3, 4, 2], piano: [8, 11, 15] },
+		"G#_7":     { guitar: [4, 6, 4, 5, 4, 4], charango: [1, 3, 2, 3, 2], ukulele: [1, 3, 2, 3], piano: [8, 12, 15, 6] },
+		
+        "A_major": { guitar: ["x", 0, 2, 2, 2, 0], charango: [2, 1, 0, 0, 0], ukulele: [2, 1, 0, 0], piano: [9, 13, 16] },
+        "A_minor": { guitar: ["x", 0, 2, 2, 1, 0], charango: [2, 0, 0, 0, 5], ukulele: [2, 0, 0, 0], piano: [9, 12, 16] },
+		"A#_major": { guitar: ["x", 1, 3, 3, 3, 1], charango: [3, 2, 1, 1, 1], ukulele: [3, 2, 1, 1], piano: [10, 14, 17] },
+		"A#_minor": { guitar: ["x", 1, 3, 3, 2, 1], charango: [3, 1, 1, 1, 1], ukulele: [3, 1, 1, 1], piano: [10, 13, 17] },
+		"A#_7":     { guitar: ["x", 1, 3, 1, 3, 1], charango: [1, 1, 1, 3, 2], ukulele: [1, 2, 1, 1], piano: [10, 14, 17, 8] },
+		
+        "B_major": { guitar: ["x", 2, 4, 4, 4, 2], charango: [4, 3, 2, 2, 2], ukulele: [4, 3, 2, 2], piano: [11, 15, 18] },
+		"B_minor": { guitar: ["x", 2, 4, 4, 3, 2], charango: [4, 2, 2, 2, 2], ukulele: [4, 2, 2, 2], piano: [11, 14, 18] },
+    };
