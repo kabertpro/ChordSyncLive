@@ -8,12 +8,21 @@
 </head>
 <body>
 
-    <div id="auth-screen" class="screen flex-center">
+    <div id="splash-screen" class="screen flex-center">
+        <div class="splash-content">
+            <div class="app-icon-placeholder">🎵</div>
+            <h1 class="splash-title">ChordSync Live</h1>
+            <p class="splash-creator">Creado por <strong>Tu Nombre / Empresa</strong></p>
+            <div class="splash-loader"></div>
+        </div>
+    </div>
+
+    <div id="auth-screen" class="screen flex-center hidden">
         <div class="auth-box">
-            <h2>ChordSync Live</h2>
-            <p>Ingresa tu nombre o instrumento para continuar</p>
-            <input type="text" id="username-input" placeholder="Ej. Director, Teclado, Guitarra 1...">
-            <button id="btn-enter" class="btn btn-primary">Ingresar al Sistema</button>
+            <h2>Ingresar al Sistema</h2>
+            <p>Introduce tu nombre o instrumento para sincronizarte</p>
+            <input type="text" id="username-input" placeholder="Ej. Director, Teclado, Guitarra...">
+            <button id="btn-enter" class="btn btn-primary">Ingresar</button>
         </div>
     </div>
 
@@ -26,13 +35,13 @@
             <div class="live-status-container">
                 <button id="btn-live-toggle" class="btn btn-danger btn-live">🔴 LIVE</button>
                 <div id="live-banner" class="live-banner hidden">
-                    <span class="pulse-dot"></span> LIVE ACTIVO: <strong id="live-director-name">-</strong>
+                    <span class="pulse-dot"></span> LIVE: <strong id="live-director-name">-</strong>
                     <button id="btn-join-live" class="btn btn-accent btn-sm">UNIRME</button>
                 </div>
             </div>
         </header>
 
-        <nav class="main-nav">
+        <nav id="main-nav" class="main-nav">
             <button class="nav-link active" data-target="section-visor">Visor</button>
             <button class="nav-link" data-target="section-songs">Canciones</button>
             <button class="nav-link" data-target="section-repertoires">Repertorios</button>
@@ -81,7 +90,7 @@
 
             <section id="section-songs" class="tab-content hidden">
                 <div class="section-action-header">
-                    <input type="text" id="search-song" placeholder="Buscar por título, autor, grupo o tag...">
+                    <input type="text" id="search-song" placeholder="Buscar canción...">
                     <button id="btn-new-song" class="btn btn-primary">+ Nueva Canción</button>
                 </div>
                 <div id="songs-list" class="item-list"></div>
@@ -99,17 +108,10 @@
                             <input type="text" id="form-key" placeholder="Tonalidad (Ej: C, Am)" required>
                         </div>
                         <div class="form-row">
-                            <input type="text" id="form-signature" placeholder="Compás (Ej: 4/4)" value="4/4">
-                            <input type="number" id="form-bpm" placeholder="Tempo (BPM)" value="80">
+                            <input type="text" id="form-signature" placeholder="Compás" value="4/4">
+                            <input type="number" id="form-bpm" placeholder="BPM" value="80">
                         </div>
-                        <div class="form-row">
-                            <input type="text" id="form-tags" placeholder="Tags (separados por coma)">
-                        </div>
-                        
-                        <h3>Estructura y Acordes</h3>
-                        <p class="form-tip">Escribe los acordes separados por espacios. Las secciones se declaran con dos puntos (Ej: <code>:INTRO C G Am F :CORO C G</code>)</p>
-                        <textarea id="form-raw-chords" rows="6" placeholder=":INTRO C_major G_major Am..." required></textarea>
-                        
+                        <textarea id="form-raw-chords" rows="5" placeholder=":INTRO C_major G_major..." required></textarea>
                         <div class="form-actions">
                             <button type="submit" class="btn btn-primary">Guardar</button>
                             <button type="button" id="btn-cancel-song" class="btn btn-secondary">Cancelar</button>
@@ -120,7 +122,7 @@
 
             <section id="section-repertoires" class="tab-content hidden">
                 <div class="section-action-header">
-                    <input type="text" id="new-repertoire-name" placeholder="Nombre del nuevo repertorio...">
+                    <input type="text" id="new-repertoire-name" placeholder="Nombre de repertorio...">
                     <button id="btn-create-repertoire" class="btn btn-primary">Crear</button>
                 </div>
                 <div id="repertoires-list" class="item-list"></div>
@@ -128,8 +130,8 @@
 
         </main>
 
-        <button id="btn-floating-exit-live" class="btn-floating-exit hidden" title="Salir del modo LIVE y liberar pantalla">
-            ✕ Salir LIVE
+        <button id="btn-floating-exit-live" class="btn-floating-exit hidden">
+            ✕ Salir del LIVE
         </button>
     </div>
 

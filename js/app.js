@@ -8,13 +8,14 @@ let currentUser = localStorage.getItem("cs_username") || "";
 let currentRole = "Músico";
 let isLiveActiveGlobal = false;
 let globalSongs = {};
-let globalRepertoires = {};
 let currentSelectedSong = null;
 let liveState = { active: false, director: "", currentSongId: "", currentSectionIndex: -1, currentChordIndex: -1 };
 
 // DOM ELEMENTS
+const splashScreen = document.getElementById("splash-screen");
 const authScreen = document.getElementById("auth-screen");
 const appScreen = document.getElementById("app-screen");
+const mainNav = document.getElementById("main-nav");
 const usernameInput = document.getElementById("username-input");
 const btnEnter = document.getElementById("btn-enter");
 const displayUserName = document.getElementById("display-user-name");
@@ -30,7 +31,16 @@ const currentActiveSectionName = document.getElementById("current-active-section
 const btnFloatingExitLive = document.getElementById("btn-floating-exit-live");
 
 document.addEventListener("DOMContentLoaded", () => {
-    if (currentUser) showApp();
+    // Simular lectura de Splash Screen durante 2.5 segundos de carga profesional
+    setTimeout(() => {
+        splashScreen.classList.add("hidden");
+        if (currentUser) {
+            showApp();
+        } else {
+            authScreen.classList.remove("hidden");
+        }
+    }, 2500);
+
     checkAndInitSongsSeed();
     setupRealtimeListeners();
     setupUIEventListeners();
@@ -41,12 +51,12 @@ btnEnter.addEventListener("click", () => {
     if (val) {
         currentUser = val;
         localStorage.setItem("cs_username", currentUser);
+        authScreen.classList.add("hidden");
         showApp();
     }
 });
 
 function showApp() {
-    authScreen.classList.add("hidden");
     appScreen.classList.remove("hidden");
     displayUserName.textContent = currentUser;
 }
@@ -59,16 +69,23 @@ function setupRealtimeListeners() {
             isLiveActiveGlobal = data.active;
             updateLiveUIStatus();
             
-            // Lógica de seguimiento automático
+            // EVALUACIÓN CONDICIONAL DE NAVEGACIÓN BLOQUEADA PARA EL MÚSICO EN LIVE
             if (data.active && switchFollow.checked && data.currentSongId) {
-                btnFloatingExitLive.classList.remove("hidden"); // Mostrar botón de salida forzada
+                if (currentRole === "Músico") {
+                    mainNav.classList.add("hidden"); // Oculta barra de pestañas por completo
+                    document.querySelector('[data-target="section-visor"]').click(); // Fuerza la vista del Visor
+                    btnFloatingExitLive.classList.remove("hidden"); // Muestra botón flotante de escape
+                }
+                
                 if (currentSelectedSong?.id !== data.currentSongId) {
                     currentSelectedSong = globalSongs[data.currentSongId];
                     renderVisorSong();
                 }
                 highlightActiveLiveChord(data.currentSectionIndex, data.currentChordIndex);
             } else {
-                if(currentRole !== "Director") {
+                // Si el LIVE se detiene o el usuario decide salirse: liberar la app
+                if (currentRole === "Músico") {
+                    mainNav.classList.remove("hidden");
                     btnFloatingExitLive.classList.add("hidden");
                 }
             }
@@ -83,11 +100,6 @@ function setupRealtimeListeners() {
             renderVisorSong();
         }
     });
-
-    onValue(ref(rtdb, 'repertoires'), (snapshot) => {
-        globalRepertoires = snapshot.val() || {};
-        renderRepertoiresList(globalRepertoires);
-    });
 }
 
 function updateLiveUIStatus() {
@@ -99,7 +111,8 @@ function updateLiveUIStatus() {
             btnLiveToggle.classList.add("active");
             btnLiveToggle.textContent = "⏹ STOP LIVE";
             currentRole = "Director";
-            btnFloatingExitLive.classList.add("hidden"); // El director no necesita flotante
+            mainNav.classList.remove("hidden"); 
+            btnFloatingExitLive.classList.add("hidden");
         } else {
             btnLiveToggle.classList.remove("active");
             btnLiveToggle.textContent = "🔴 LIVE";
@@ -110,13 +123,15 @@ function updateLiveUIStatus() {
         btnLiveToggle.classList.remove("active");
         btnLiveToggle.textContent = "🔴 LIVE";
         currentRole = "Músico";
+        mainNav.classList.remove("hidden");
         btnFloatingExitLive.classList.add("hidden");
     }
 }
 
-// ACCIÓN DEL BOTÓN FLOTANTE (DESCONECTARSE Y LIBERAR)
+// SALIR FORZADAMENTE DEL LIVE (REQUISITO MÚSICO)
 btnFloatingExitLive.addEventListener("click", () => {
-    switchFollow.checked = false; // Rompe el lazo de seguimiento instantáneamente
+    switchFollow.checked = false; 
+    mainNav.classList.remove("hidden"); // Devolver barra de navegación
     btnFloatingExitLive.classList.add("hidden");
     document.querySelectorAll(".chord-box").forEach(box => box.classList.remove("active-chord"));
     activeSectionIndicator.classList.add("hidden");
@@ -148,7 +163,6 @@ document.querySelectorAll(".nav-link").forEach(link => {
     });
 });
 
-// INTERFAZ DE RENDERING GRÁFICO DINÁMICO DE DIGITACIÓN
 function renderVisorSong() {
     if (!currentSelectedSong) return;
     
@@ -173,7 +187,6 @@ function renderVisorSong() {
                 secBadge.classList.add("chord-section-header");
                 secBadge.textContent = section.name;
                 box.appendChild(secBadge);
-                box.classList.add("active-section");
             }
             
             const cleanName = chordKey.replace("_major", "").replace("_minor", "m").replace("_7", "7").replace("_", " ");
@@ -182,19 +195,16 @@ function renderVisorSong() {
             nameEl.textContent = cleanName;
             box.appendChild(nameEl);
             
-            // RENDERING VISUAL AVANZADO
+            // LEER DE LA BD GLOBAL (CORREGIDA VÍA SCRIPT EXPLICITO)
             if (selectedInst !== "none" && window.db && window.db[chordKey]) {
                 const chordData = window.db[chordKey];
                 
                 if (selectedInst === "piano") {
-                    // Genera un mini piano interactivo filtrado por octava relativas
                     const pianoContainer = document.createElement("div");
                     pianoContainer.classList.add("piano-mini");
                     
-                    // Índices de teclas blancas y negras mapeadas en un rango de octava
                     const whiteKeys = [0, 2, 4, 5, 7, 9, 11];
-                    const blackKeys = [{k:1, l:1}, {k:3, l:3}, {k:6, l:6}, {k:8, l:8}, {k:10, l:10}];
-                    
+                    const blackKeys = [{k:1}, {k:3}, {k:6}, {k:8}, {k:10}];
                     const absoluteNotes = chordData.piano.map(n => n % 12);
                     
                     whiteKeys.forEach(noteVal => {
@@ -210,11 +220,9 @@ function renderVisorSong() {
                         if (absoluteNotes.includes(bObj.k)) bKey.classList.add("active-key");
                         pianoContainer.appendChild(bKey);
                     });
-                    
                     box.appendChild(pianoContainer);
                     
                 } else {
-                    // Genera un mini Diapasón para Instrumentos de Cuerda (Guitarra, Charango, Ukelele)
                     const stringPositions = chordData[selectedInst];
                     if (stringPositions && Array.isArray(stringPositions)) {
                         const fretboard = document.createElement("div");
@@ -235,10 +243,9 @@ function renderVisorSong() {
                                 open.textContent = "○";
                                 stringLine.appendChild(open);
                             } else {
-                                // Coloca el punto proporcionalmente en el traste del diapasón
                                 const dot = document.createElement("div");
                                 dot.classList.add("string-fret-dot");
-                                const calculatedTop = Math.min((parseInt(pos) * 6) + 2, 30);
+                                const calculatedTop = Math.min((parseInt(pos) * 6) + 4, 32);
                                 dot.style.top = `${calculatedTop}px`;
                                 stringLine.appendChild(dot);
                             }
@@ -254,7 +261,6 @@ function renderVisorSong() {
                     updateLiveNavigation(currentSelectedSong.id, sIdx, cIdx);
                 }
             });
-            
             chordsGrid.appendChild(box);
         });
     });
@@ -284,6 +290,7 @@ selectInstrument.addEventListener("change", renderVisorSong);
 
 function renderSongsList(songsObj) {
     const listContainer = document.getElementById("songs-list");
+    if (!listContainer) return;
     listContainer.innerHTML = "";
     const filter = document.getElementById("search-song").value.toLowerCase();
     
@@ -309,68 +316,11 @@ function renderSongsList(songsObj) {
         renderVisorSong();
         document.querySelector('[data-target="section-visor"]').click();
     }));
-    document.querySelectorAll(".btn-edit-song").forEach(b => b.addEventListener("click", (e) => openSongForm(globalSongs[e.target.dataset.id])));
-    document.querySelectorAll(".btn-delete-song").forEach(b => b.addEventListener("click", (e) => { if(confirm("¿Eliminar?")) deleteSong(e.target.dataset.id); }));
 }
 
-const songFormContainer = document.getElementById("song-form-container");
-document.getElementById("btn-new-song").addEventListener("click", () => openSongForm());
-document.getElementById("btn-cancel-song").addEventListener("click", () => songFormContainer.classList.add("hidden"));
-
-function openSongForm(song = null) {
-    songFormContainer.classList.remove("hidden");
-    if (song) {
-        document.getElementById("form-song-id").value = song.id;
-        document.getElementById("form-title").value = song.title;
-        document.getElementById("form-author").value = song.author;
-        document.getElementById("form-group").value = song.group || "";
-        document.getElementById("form-key").value = song.key;
-        document.getElementById("form-signature").value = song.timeSignature;
-        document.getElementById("form-bpm").value = song.bpm;
-        let rawStr = "";
-        song.sections.forEach(s => { rawStr += `:${s.name} ${s.chords.join(" ")} `; });
-        document.getElementById("form-raw-chords").value = rawStr.trim();
-    } else {
-        document.getElementById("song-form").reset();
-        document.getElementById("form-song-id").value = "";
+function setupUIEventListeners() {
+    const searchSong = document.getElementById("search-song");
+    if(searchSong) {
+        searchSong.addEventListener("input", () => renderSongsList(globalSongs));
     }
 }
-
-document.getElementById("song-form").addEventListener("submit", (e) => {
-    e.preventDefault();
-    const id = document.getElementById("form-song-id").value;
-    const songData = {
-        title: document.getElementById("form-title").value.trim(),
-        author: document.getElementById("form-author").value.trim(),
-        group: document.getElementById("form-group").value.trim(),
-        key: document.getElementById("form-key").value.trim(),
-        timeSignature: document.getElementById("form-signature").value.trim(),
-        bpm: parseInt(document.getElementById("form-bpm").value) || 80,
-        sections: parseChordsInput(document.getElementById("form-raw-chords").value)
-    };
-    if (id) songData.id = id;
-    saveSong(songData).then(() => songFormContainer.classList.add("hidden"));
-});
-
-document.getElementById("search-song").addEventListener("input", () => renderSongsList(globalSongs));
-
-function renderRepertoiresList(repObj) {
-    const container = document.getElementById("repertoires-list");
-    container.innerHTML = "";
-    Object.values(repObj).forEach(rep => {
-        const card = document.createElement("div");
-        card.classList.add("item-card");
-        card.innerHTML = `<div><h4>📂 ${rep.name}</h4></div>`;
-        container.appendChild(card);
-    });
-}
-
-document.getElementById("btn-create-repertoire").addEventListener("click", () => {
-    const input = document.getElementById("new-repertoire-name");
-    if (input.value.trim()) {
-        createRepertoire(input.value.trim());
-        input.value = "";
-    }
-});
-
-function setupUIEventListeners() {}

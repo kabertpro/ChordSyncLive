@@ -1,19 +1,19 @@
 :root {
-    --bg-dark-primary: #0a0f1d;
-    --bg-dark-secondary: #121b2d;
-    --bg-button: #1a263f;
-    --text-white: #ffffff;
-    --text-muted: #8fa0c0;
-    --accent-gold: #ffd700;
-    --accent-gold-hover: #ffea70;
-    --danger-red: #d93838;
+    --bg-dark-primary: #0f172a;
+    --bg-dark-secondary: #1e293b;
+    --bg-card: #334155;
+    --text-white: #f8fafc;
+    --text-muted: #94a3b8;
+    --accent-gold: #fbbf24;
+    --danger-red: #ef4444;
+    --primary-blue: #3b82f6;
 }
 
 * {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     -webkit-tap-highlight-color: transparent;
 }
 
@@ -35,126 +35,163 @@ body {
     flex-direction: column;
 }
 
-.flex-center { display: flex; justify-content: center; align-items: center; }
+.flex-center { display: flex; justify-content: center; align-items: center; flex-direction: column; }
 .hidden { display: none !important; }
 
+/* ESTILOS DEL SPLASH SCREEN */
+#splash-screen {
+    background-color: #0b0f19;
+    z-index: 99999;
+}
+.splash-content {
+    text-align: center;
+}
+.app-icon-placeholder {
+    font-size: 4rem;
+    margin-bottom: 15px;
+    animation: pulse-icon 2s infinite alternate;
+}
+.splash-title {
+    font-size: 2.2rem;
+    color: #fff;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    margin-bottom: 5px;
+}
+.splash-creator {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    margin-bottom: 30px;
+}
+.splash-loader {
+    width: 40px;
+    height: 40px;
+    border: 4px solid rgba(255, 255, 255, 0.1);
+    border-top-color: var(--accent-gold);
+    border-radius: 50%;
+    margin: 0 auto;
+    animation: spin 1s linear infinite;
+}
+
+/* BOTONES */
 .btn {
     padding: 10px 16px;
     border: none;
-    border-radius: 6px;
-    font-weight: bold;
+    border-radius: 8px;
+    font-weight: 600;
     cursor: pointer;
-    font-size: 0.95rem;
-    transition: background 0.2s;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
 }
-.btn-primary { background-color: #2563eb; color: var(--text-white); }
-.btn-secondary { background-color: var(--bg-button); color: var(--text-muted); }
-.btn-danger { background-color: var(--danger-red); color: var(--text-white); }
+.btn-primary { background-color: var(--primary-blue); color: white; }
+.btn-secondary { background-color: var(--bg-card); color: var(--text-white); }
+.btn-danger { background-color: var(--danger-red); color: white; }
 .btn-accent { background-color: var(--accent-gold); color: #000; }
-.btn-sm { padding: 4px 10px; font-size: 0.8rem; border-radius: 4px; }
+.btn-sm { padding: 5px 10px; font-size: 0.75rem; border-radius: 6px; }
 
-/* LOGIN */
+/* AUTH SCREEN */
 .auth-box {
     background-color: var(--bg-dark-secondary);
-    padding: 30px;
-    border-radius: 12px;
+    padding: 30px 24px;
+    border-radius: 16px;
     width: 90%;
-    max-width: 400px;
+    max-width: 380px;
     text-align: center;
-    border: 1px solid #1e293b;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.3);
 }
+.auth-box h2 { margin-bottom: 8px; font-size: 1.5rem; }
+.auth-box p { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 20px; }
 .auth-box input {
     width: 100%;
     padding: 12px;
-    border-radius: 6px;
-    border: 1px solid #334155;
+    border-radius: 8px;
+    border: 1px solid var(--bg-card);
     background: var(--bg-dark-primary);
-    color: #fff;
-    margin-bottom: 20px;
+    color: white;
+    margin-bottom: 16px;
     font-size: 1rem;
     text-align: center;
 }
+.auth-box input:focus { border-color: var(--primary-blue); outline: none; }
 
-/* HEADER Y NAV */
+/* HEADER Y NAVEGACIÓN */
 .main-header {
     background-color: var(--bg-dark-secondary);
-    padding: 10px 16px;
+    padding: 12px 16px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 1px solid #1e293b;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
 }
-.user-badge { font-size: 0.85rem; color: var(--text-muted); background: var(--bg-dark-primary); padding: 4px 10px; border-radius: 20px; }
-.live-status-container { display: flex; align-items: center; gap: 10px; }
-.btn-live.active { animation: blink 1s infinite alternate; box-shadow: 0 0 12px var(--danger-red); }
-.live-banner { background: rgba(217, 56, 56, 0.15); border: 1px solid var(--danger-red); padding: 6px 12px; border-radius: 6px; font-size: 0.8rem; display: flex; align-items: center; gap: 8px; }
-.pulse-dot { width: 8px; height: 8px; background-color: var(--danger-red); border-radius: 50%; animation: pulse 1s infinite alternate; }
+.user-badge { font-size: 0.8rem; color: var(--accent-gold); background: rgba(251, 191, 36, 0.1); padding: 4px 12px; border-radius: 20px; font-weight: 600; }
+.live-status-container { display: flex; align-items: center; gap: 8px; }
+.live-banner { background: rgba(239, 68, 68, 0.15); border: 1px solid var(--danger-red); padding: 4px 10px; border-radius: 8px; font-size: 0.8rem; display: flex; align-items: center; gap: 6px; }
+.pulse-dot { width: 8px; height: 8px; background-color: var(--danger-red); border-radius: 50%; animation: pulse 0.8s infinite alternate; }
 
-.main-nav { display: flex; background-color: var(--bg-dark-secondary); border-bottom: 1px solid #1e293b; }
-.nav-link { flex: 1; background: none; border: none; color: var(--text-muted); padding: 14px 0; cursor: pointer; font-size: 0.95rem; text-align: center; border-bottom: 3px solid transparent; }
-.nav-link.active { color: var(--accent-gold); border-bottom-color: var(--accent-gold); font-weight: bold; }
+.main-nav { display: flex; background-color: var(--bg-dark-secondary); }
+.nav-link { flex: 1; background: none; border: none; color: var(--text-muted); padding: 14px 0; cursor: pointer; font-size: 0.9rem; font-weight: 500; border-bottom: 3px solid transparent; }
+.nav-link.active { color: var(--text-white); border-bottom-color: var(--primary-blue); font-weight: 700; }
 
-.content-area { flex: 1; overflow-y: auto; position: relative; -webkit-overflow-scrolling: touch; }
-.tab-content { padding: 12px; height: 100%; display: flex; flex-direction: column; }
+.content-area { flex: 1; overflow-y: auto; position: relative; }
+.tab-content { padding: 12px; display: flex; flex-direction: column; height: 100%; }
 
-/* VISOR PRINCIPAL */
-.visor-controls { display: flex; justify-content: space-between; align-items: center; background: var(--bg-dark-secondary); padding: 10px; border-radius: 8px; margin-bottom: 10px; }
-.control-group { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; }
-.control-group select { background: var(--bg-dark-primary); color: #fff; border: 1px solid #334155; padding: 4px 8px; border-radius: 4px; }
-.active-section-indicator { background: rgba(255, 215, 0, 0.1); border: 1px solid var(--accent-gold); color: var(--accent-gold); padding: 8px; border-radius: 6px; text-align: center; font-weight: bold; margin-bottom: 10px; font-size: 0.9rem; }
+/* VISOR Y BOTONES CONTROL */
+.visor-controls { display: flex; justify-content: space-between; align-items: center; background: var(--bg-dark-secondary); padding: 10px 14px; border-radius: 10px; margin-bottom: 10px; }
+.control-group { display: flex; align-items: center; gap: 6px; font-size: 0.85rem; color: var(--text-muted); }
+.control-group select { background: var(--bg-dark-primary); color: white; border: 1px solid var(--bg-card); padding: 6px 10px; border-radius: 6px; font-size: 0.85rem; }
 
-.visor-canvas { background-color: #0d1527; border: 2px solid #1e293b; border-radius: 10px; flex: 1; display: flex; flex-direction: column; overflow-y: auto; padding: 12px; }
-.song-meta-header { display: flex; justify-content: space-between; border-bottom: 2px solid #1e293b; padding-bottom: 10px; margin-bottom: 12px; }
-.song-meta-header h1 { font-size: 1.25rem; color: #fff; }
-.song-meta-header h3 { font-size: 0.85rem; color: var(--text-muted); font-weight: normal; }
-.music-specs { text-align: right; font-size: 0.75rem; color: var(--text-muted); }
-.music-specs span { color: var(--accent-gold); font-weight: bold; }
+.active-section-indicator { background: rgba(59, 130, 246, 0.15); border: 1px solid var(--primary-blue); color: #60a5fa; padding: 8px; border-radius: 8px; text-align: center; font-weight: 700; margin-bottom: 10px; font-size: 0.85rem; text-transform: uppercase; }
 
-/* CUADRÍCULA DE ACORDES RESPONSIVE REQUERIDA */
+.visor-canvas { background-color: #090d16; border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; flex: 1; padding: 16px; overflow-y: auto; }
+.song-meta-header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid var(--bg-dark-secondary); padding-bottom: 12px; margin-bottom: 16px; }
+.song-meta-header h1 { font-size: 1.3rem; font-weight: 700; color: white; }
+.song-meta-header h3 { font-size: 0.85rem; color: var(--text-muted); font-weight: 400; margin-top: 2px; }
+.music-specs { text-align: right; font-size: 0.8rem; color: var(--text-muted); line-height: 1.4; }
+.music-specs span { color: var(--accent-gold); font-weight: 600; }
+
+/* CUADRÍCULA ESTRICTA DE ACORDES */
 .chords-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr); /* 4 por fila obligatorio en celular */
-    gap: 8px;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
 }
 
-/* RENDERING DE CONTENEDOR DE ACORDE */
+/* BOX DEL ACORDE */
 .chord-box {
     background: var(--bg-dark-secondary);
-    border: 1px solid #22314d;
-    border-radius: 6px;
-    padding: 8px 4px;
+    border: 1px solid rgba(255,255,255,0.03);
+    border-radius: 10px;
+    padding: 10px 4px 6px 4px;
     text-align: center;
     position: relative;
-    cursor: pointer;
-    transition: all 0.15s ease;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
     align-items: center;
-    min-height: 105px;
+    min-height: 110px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.15);
 }
-.chord-section-header { position: absolute; top: -7px; left: 4px; background: #2563eb; color: #fff; font-size: 0.55rem; padding: 1px 4px; border-radius: 3px; font-weight: bold; z-index: 2; text-transform: uppercase; }
-.chord-name { font-size: 1.2rem; font-weight: bold; color: #fff; margin-bottom: 4px; }
+.chord-section-header { position: absolute; top: -6px; left: 6px; background: var(--primary-blue); color: white; font-size: 0.6rem; padding: 1px 6px; border-radius: 4px; font-weight: bold; text-transform: uppercase; z-index: 5; }
+.chord-name { font-size: 1.3rem; font-weight: bold; color: white; margin-bottom: 4px; }
 
-/* GRAPHIC INTERFACE: CORDÓFONOS (DIAPASÓN) */
+/* GRÁFICO DIAPASÓN (Cuerdas) */
 .fretboard-mini {
     display: flex;
-    flex-direction: row;
     justify-content: center;
-    gap: 3px;
-    background: rgba(0, 0, 0, 0.3);
-    padding: 4px;
-    border-radius: 4px;
-    width: 100%;
+    gap: 4px;
+    background: rgba(0, 0, 0, 0.4);
+    padding: 4px 6px;
+    border-radius: 6px;
+    width: 90%;
 }
 .string-line {
     display: flex;
     flex-direction: column;
     align-items: center;
     position: relative;
-    width: 10px;
-    height: 38px;
-    background: linear-gradient(to right, transparent 4px, #475569 4px, #475569 6px, transparent 6px);
+    width: 8px;
+    height: 40px;
+    background: linear-gradient(to right, transparent 3px, #64748b 3px, #64748b 5px, transparent 5px);
 }
 .string-fret-dot {
     position: absolute;
@@ -162,77 +199,75 @@ body {
     height: 7px;
     background-color: var(--accent-gold);
     border-radius: 50%;
-    left: 1.5px;
 }
-.string-fret-open { font-size: 0.55rem; color: #4ade80; font-weight: bold; }
-.string-fret-mute { font-size: 0.55rem; color: #ef4444; font-weight: bold; }
+.string-fret-open { font-size: 0.6rem; color: #10b981; font-weight: 700; line-height: 1; }
+.string-fret-mute { font-size: 0.6rem; color: var(--danger-red); font-weight: 700; line-height: 1; }
 
-/* GRAPHIC INTERFACE: TECLADO DE PIANO TRUNCADO */
+/* GRÁFICO PIANO UN OCTAVA */
 .piano-mini {
-    display: flex;
     position: relative;
-    width: 64px;
-    height: 32px;
-    background: #1e293b;
-    border: 1px solid #334155;
-    padding: 1px;
+    width: 70px;
+    height: 35px;
+    background: #000;
+    border-radius: 4px;
+    overflow: hidden;
+    display: flex;
+    padding: 0 1px;
 }
 .piano-key-white {
     flex: 1;
     background: #ffffff;
-    border-right: 1px solid #d1d5db;
+    border-right: 1px solid #cbd5e1;
     height: 100%;
-    z-index: 1;
 }
 .piano-key-white:last-child { border-right: none; }
 .piano-key-black {
     position: absolute;
-    background: #000000;
+    background: #1e293b;
     width: 6px;
     height: 60%;
-    z-index: 2;
+    z-index: 10;
 }
-/* Posicionamiento exacto de alteraciones en la octava */
-.piano-key-black.k-1 { left: 6px; }
-.piano-key-black.k-3 { left: 15px; }
-.piano-key-black.k-6 { left: 32px; }
-.piano-key-black.k-8 { left: 41px; }
-.piano-key-black.k-10 { left: 50px; }
+.piano-key-black.k-1 { left: 7px; }
+.piano-key-black.k-3 { left: 17px; }
+.piano-key-black.k-6 { left: 36px; }
+.piano-key-black.k-8 { left: 46px; }
+.piano-key-black.k-10 { left: 56px; }
 
-/* Iluminaciones de ejecución */
+/* ACTIVACIONES EN LIVE */
 .piano-key-white.active-key { background: var(--accent-gold) !important; }
 .piano-key-black.active-key { background: var(--accent-gold) !important; }
 
-/* ILUMINACIÓN DORADA LIVE */
-.chord-box.active-chord { background: #2a2307; border-color: var(--accent-gold); box-shadow: 0 0 12px rgba(255, 215, 0, 0.4); transform: scale(1.02); }
+.chord-box.active-chord { background: #2e260f; border-color: var(--accent-gold); box-shadow: 0 0 15px rgba(251, 191, 38, 0.4); transform: scale(1.02); }
 .chord-box.active-chord .chord-name { color: var(--accent-gold); }
-.chord-box.active-section { border-left: 3px solid var(--accent-gold); }
 
-/* BOTÓN FLOTANTE DE SALIDA EXCLUSIVO */
+/* BOTÓN FLOTANTE */
 .btn-floating-exit {
     position: fixed;
-    bottom: 20px;
-    right: 20px;
+    bottom: 24px;
+    right: 24px;
     background-color: var(--danger-red);
     color: white;
     border: none;
-    padding: 12px 20px;
-    border-radius: 30px;
-    font-weight: bold;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
-    z-index: 9999;
+    padding: 14px 22px;
+    border-radius: 50px;
+    font-weight: 700;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+    z-index: 99999;
     cursor: pointer;
     font-size: 0.9rem;
-    animation: bounce 2s infinite;
 }
 
-/* COMPATIBILIDAD CON ESCRITORIOS */
+/* CARDS LISTADOS */
+.item-card { background: var(--bg-dark-secondary); padding: 12px; border-radius: 10px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+.item-info h4 { font-size: 1rem; color: #fff; }
+.item-info p { font-size: 0.8rem; color: var(--text-muted); }
+.item-actions { display: flex; gap: 6px; }
+
 @media (min-width: 768px) {
     .chords-grid { grid-template-columns: repeat(8, 1fr); }
-    .main-header { padding: 12px 40px; }
-    .tab-content { padding: 20px 40px; }
 }
 
-@keyframes blink { from { background-color: var(--danger-red); } to { background-color: #7a1515; } }
-@keyframes pulse { from { transform: scale(1); opacity: 1; } to { transform: scale(1.3); opacity: 0.4; } }
-@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes pulse-icon { from { transform: scale(1); opacity: 0.8; } to { transform: scale(1.15); opacity: 1; } }
+@keyframes pulse { from { opacity: 1; } to { opacity: 0.3; } }
