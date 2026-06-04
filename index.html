@@ -22,11 +22,11 @@
             <h2>Ingresar al Sistema</h2>
             <p>Introduce tu nombre o instrumento para sincronizarte</p>
             <input type="text" id="username-input" placeholder="Ej. Director, Teclado, Guitarra...">
-            <button id="btn-enter" class="btn btn-primary">Ingresar</button>
+            <button id="btn-enter" class="btn btn-primary">Ingresar al Sistema</button>
         </div>
     </div>
 
-    <div id="app-screen" class="screen hidden">
+    <div id="app-screen" class="app-scroll-container hidden">
         
         <header class="main-header">
             <div class="user-badge">
@@ -96,22 +96,18 @@
                 <div id="songs-list" class="item-list"></div>
 
                 <div id="song-form-container" class="form-container hidden">
-                    <h2 id="form-song-title">Nueva Canción</h2>
+                    <h2>Nueva Canción</h2>
                     <form id="song-form">
                         <input type="hidden" id="form-song-id">
+                        <div class="form-row"><input type="text" id="form-title" placeholder="Título *" required></div>
+                        <div class="form-row"><input type="text" id="form-author" placeholder="Autor *" required></div>
+                        <div class="form-row"><input type="text" id="form-group" placeholder="Grupo o Cantante"></div>
                         <div class="form-row">
-                            <input type="text" id="form-title" placeholder="Título *" required>
-                            <input type="text" id="form-author" placeholder="Autor *" required>
-                        </div>
-                        <div class="form-row">
-                            <input type="text" id="form-group" placeholder="Grupo o Cantante">
-                            <input type="text" id="form-key" placeholder="Tonalidad (Ej: C, Am)" required>
-                        </div>
-                        <div class="form-row">
+                            <input type="text" id="form-key" placeholder="Tonalidad" required>
                             <input type="text" id="form-signature" placeholder="Compás" value="4/4">
-                            <input type="number" id="form-bpm" placeholder="BPM" value="80">
                         </div>
-                        <textarea id="form-raw-chords" rows="5" placeholder=":INTRO C_major G_major..." required></textarea>
+                        <div class="form-row"><input type="number" id="form-bpm" placeholder="BPM" value="80"></div>
+                        <textarea id="form-raw-chords" rows="4" placeholder=":INTRO C_major G_major..." required></textarea>
                         <div class="form-actions">
                             <button type="submit" class="btn btn-primary">Guardar</button>
                             <button type="button" id="btn-cancel-song" class="btn btn-secondary">Cancelar</button>
@@ -127,13 +123,12 @@
                 </div>
                 <div id="repertoires-list" class="item-list"></div>
             </section>
-
         </main>
-
-        <button id="btn-floating-exit-live" class="btn-floating-exit hidden">
-            ✕ Salir del LIVE
-        </button>
     </div>
+
+    <button id="btn-floating-exit-live" class="btn-floating-exit hidden">
+        ✕ Salir del LIVE
+    </button>
 
     <script type="importmap">
       {
@@ -143,7 +138,6 @@
         }
       }
     </script>
-    <script src="js/chords-db.js"></script>
     <script type="module" src="js/firebase.js"></script>
     <script type="module" src="js/songs.js"></script>
     <script type="module" src="js/repertoire.js"></script>

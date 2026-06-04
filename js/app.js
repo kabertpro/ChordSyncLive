@@ -3,6 +3,24 @@ import { saveSong, deleteSong, parseChordsInput, checkAndInitSongsSeed } from ".
 import { createRepertoire, deleteRepertoire } from "./repertoire.js";
 import { toggleLiveState, updateLiveNavigation } from "./live.js";
 
+// INYECCIÓN INTERNA DIRECTA DE TU BASE DE DATOS PARA EVITAR ERRORES DE ASINCRONÍA
+const localChordsDB = {
+    "C_major": { guitar: ["x", 3, 2, 0, 1, 0], charango: [0, 0, 0, 3, 0], ukulele: [0, 0, 0, 3], piano: [0, 4, 7] },
+    "C_minor": { guitar: ["x", 3, 5, 5, 4, 3], charango: [5, 3, 3, 3, 3], ukulele: [5, 3, 3, 3], piano: [0, 3, 7] },
+    "C_7": { guitar: ["x", 3, 2, 3, 1, 0], charango: [0, 0, 0, 1, 0], ukulele: [0, 0, 0, 1], piano: [0, 3, 7] },
+    "D_major": { guitar: ["x", "x", 0, 2, 3, 2], charango: [2, 0, 1, 0, 2], ukulele: [2, 2, 2, 0], piano: [2, 6, 9] },
+    "D_minor": { guitar: ["x", "x", 0, 2, 3, 1], charango: [2, 0, 1, 1, 2], ukulele: [2, 2, 1, 0], piano: [2, 5, 9] },
+    "E_major": { guitar: [0, 2, 2, 1, 0, 0], charango: [4, 4, 3, 2, 0], ukulele: [4, 4, 4, 2], piano: [4, 8, 11] },
+    "E_minor": { guitar: [0, 2, 2, 0, 0, 0], charango: [0, 4, 3, 2, 0], ukulele: [0, 4, 3, 2], piano: [4, 7, 11] },
+    "F_major": { guitar: [1, 3, 3, 2, 1, 1], charango: [0, 1, 0, 3, 0], ukulele: [2, 0, 1, 0], piano: [5, 9, 12] },
+    "G_major": { guitar: [3, 2, 0, 0, 0, 3], charango: [0, 2, 3, 2, 3], ukulele: [0, 2, 3, 2], piano: [7, 11, 14] },
+    "G_minor": { guitar: [3, 5, 5, 3, 3, 3], charango: [0, 2, 3, 1, 3], ukulele: [0, 2, 3, 1], piano: [7, 10, 14] },
+    "A_major": { guitar: ["x", 0, 2, 2, 2, 0], charango: [2, 1, 0, 0, 2], ukulele: [2, 1, 0, 0], piano: [9, 13, 16] },
+    "A_minor": { guitar: ["x", 0, 2, 2, 1, 0], charango: [2, 0, 0, 0, 2], ukulele: [2, 0, 0, 0], piano: [9, 12, 16] },
+    "B_major": { guitar: ["x", 2, 4, 4, 4, 2], charango: [4, 2, 2, 2, 4], ukulele: [4, 3, 2, 2], piano: [11, 15, 18] },
+    "B_minor": { guitar: ["x", 2, 4, 4, 3, 2], charango: [4, 2, 2, 1, 4], ukulele: [4, 2, 2, 2], piano: [11, 14, 18] }
+};
+
 // LOCAL STATE
 let currentUser = localStorage.getItem("cs_username") || "";
 let currentRole = "Músico";
@@ -30,8 +48,15 @@ const activeSectionIndicator = document.getElementById("active-section-indicator
 const currentActiveSectionName = document.getElementById("current-active-section-name");
 const btnFloatingExitLive = document.getElementById("btn-floating-exit-live");
 
+// FUNCIÓN DE DISPARO DE PANTALLA COMPLETA ABSOLUTA (ANDROID / IOS / CHROME / SAFARI)
+function launchFullScreen(element) {
+    if (element.requestFullscreen) { element.requestFullscreen(); }
+    else if (element.mozRequestFullScreen) { element.mozRequestFullScreen(); }
+    else if (element.webkitRequestFullscreen) { element.webkitRequestFullscreen(); }
+    else if (element.msRequestFullscreen) { element.msRequestFullscreen(); }
+}
+
 document.addEventListener("DOMContentLoaded", () => {
-    // Simular lectura de Splash Screen durante 2.5 segundos de carga profesional
     setTimeout(() => {
         splashScreen.classList.add("hidden");
         if (currentUser) {
@@ -39,7 +64,7 @@ document.addEventListener("DOMContentLoaded", () => {
         } else {
             authScreen.classList.remove("hidden");
         }
-    }, 2500);
+    }, 2000);
 
     checkAndInitSongsSeed();
     setupRealtimeListeners();
@@ -53,6 +78,7 @@ btnEnter.addEventListener("click", () => {
         localStorage.setItem("cs_username", currentUser);
         authScreen.classList.add("hidden");
         showApp();
+        launchFullScreen(document.documentElement); // PANTALLA COMPLETA AL HACER CLICK EN ENTRAR
     }
 });
 
@@ -69,12 +95,11 @@ function setupRealtimeListeners() {
             isLiveActiveGlobal = data.active;
             updateLiveUIStatus();
             
-            // EVALUACIÓN CONDICIONAL DE NAVEGACIÓN BLOQUEADA PARA EL MÚSICO EN LIVE
             if (data.active && switchFollow.checked && data.currentSongId) {
                 if (currentRole === "Músico") {
-                    mainNav.classList.add("hidden"); // Oculta barra de pestañas por completo
-                    document.querySelector('[data-target="section-visor"]').click(); // Fuerza la vista del Visor
-                    btnFloatingExitLive.classList.remove("hidden"); // Muestra botón flotante de escape
+                    mainNav.classList.add("hidden"); // Oculta navegación de forma estricta
+                    document.querySelector('[data-target="section-visor"]').click(); 
+                    btnFloatingExitLive.classList.remove("hidden"); 
                 }
                 
                 if (currentSelectedSong?.id !== data.currentSongId) {
@@ -83,7 +108,6 @@ function setupRealtimeListeners() {
                 }
                 highlightActiveLiveChord(data.currentSectionIndex, data.currentChordIndex);
             } else {
-                // Si el LIVE se detiene o el usuario decide salirse: liberar la app
                 if (currentRole === "Músico") {
                     mainNav.classList.remove("hidden");
                     btnFloatingExitLive.classList.add("hidden");
@@ -128,16 +152,16 @@ function updateLiveUIStatus() {
     }
 }
 
-// SALIR FORZADAMENTE DEL LIVE (REQUISITO MÚSICO)
 btnFloatingExitLive.addEventListener("click", () => {
     switchFollow.checked = false; 
-    mainNav.classList.remove("hidden"); // Devolver barra de navegación
+    mainNav.classList.remove("hidden"); 
     btnFloatingExitLive.classList.add("hidden");
     document.querySelectorAll(".chord-box").forEach(box => box.classList.remove("active-chord"));
     activeSectionIndicator.classList.add("hidden");
 });
 
 btnLiveToggle.addEventListener("click", () => {
+    launchFullScreen(document.documentElement); // Asegura pantalla completa al iniciar live
     if (liveState.active && liveState.director === currentUser) {
         toggleLiveState(false, "");
     } else {
@@ -146,6 +170,7 @@ btnLiveToggle.addEventListener("click", () => {
 });
 
 btnJoinLive.addEventListener("click", () => {
+    launchFullScreen(document.documentElement); // Asegura pantalla completa al unirse
     switchFollow.checked = true;
     if (liveState.currentSongId) {
         currentSelectedSong = globalSongs[liveState.currentSongId];
@@ -160,9 +185,11 @@ document.querySelectorAll(".nav-link").forEach(link => {
         document.querySelectorAll(".tab-content").forEach(c => c.classList.add("hidden"));
         e.target.classList.add("active");
         document.getElementById(e.target.dataset.target).classList.remove("hidden");
+        window.scrollTo({ top: 0, behavior: 'smooth' }); // Regresar arriba al cambiar de sección
     });
 });
 
+// INTERFAZ DE RENDERIZADO VISUAL EXTREMADAMENTE SEGURO
 function renderVisorSong() {
     if (!currentSelectedSong) return;
     
@@ -195,9 +222,9 @@ function renderVisorSong() {
             nameEl.textContent = cleanName;
             box.appendChild(nameEl);
             
-            // LEER DE LA BD GLOBAL (CORREGIDA VÍA SCRIPT EXPLICITO)
-            if (selectedInst !== "none" && window.db && window.db[chordKey]) {
-                const chordData = window.db[chordKey];
+            // LECTURA DIRECTA DE LA BASE DE DATOS LOCAL SEGURA
+            if (selectedInst !== "none" && localChordsDB[chordKey]) {
+                const chordData = localChordsDB[chordKey];
                 
                 if (selectedInst === "piano") {
                     const pianoContainer = document.createElement("div");
@@ -271,6 +298,7 @@ function highlightActiveLiveChord(sIdx, cIdx) {
         if (parseInt(box.dataset.sectionIndex) === sIdx && parseInt(box.dataset.chordIndex) === cIdx) {
             box.classList.add("active-chord");
             if (switchFollow.checked) {
+                // Scroll nativo centrado hacia el acorde activo
                 box.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
         } else {
