@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>ChordSync Live</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
@@ -107,8 +107,8 @@
                         </div>
                         
                         <h3>Estructura y Acordes</h3>
-                        <p class="form-tip">Escribe los acordes separados por espacios. Las secciones se declaran antecedidas por dos puntos (Ej: <code>:INTRO C G Am F :CORO C G</code>)</p>
-                        <textarea id="form-raw-chords" rows="6" placeholder=":INTRO C major G_major Am :CORO..." required></textarea>
+                        <p class="form-tip">Escribe los acordes separados por espacios. Las secciones se declaran con dos puntos (Ej: <code>:INTRO C G Am F :CORO C G</code>)</p>
+                        <textarea id="form-raw-chords" rows="6" placeholder=":INTRO C_major G_major Am..." required></textarea>
                         
                         <div class="form-actions">
                             <button type="submit" class="btn btn-primary">Guardar</button>
@@ -127,6 +127,10 @@
             </section>
 
         </main>
+
+        <button id="btn-floating-exit-live" class="btn-floating-exit hidden" title="Salir del modo LIVE y liberar pantalla">
+            ✕ Salir LIVE
+        </button>
     </div>
 
     <script type="importmap">
