@@ -3,7 +3,7 @@ import { saveSong, deleteSong, parseChordsInput } from "./songs.js";
 import { createRepertoire, deleteRepertoire } from "./repertoire.js";
 import { toggleLiveState, updateLiveNavigation } from "./live.js";
 
-// BASE DE DATOS REAL COPIADA EXACTAMENTE DE TU ARCHIVO (Mantenida local para velocidad)
+// BASE DE DATOS REAL COPIADA EXACTAMENTE DE TU ARCHIVO
 const localChordsDB = {
     "C_major": { guitar: ["x", 3, 2, 0, 1, 0], charango: [0, 0, 0, 3, 0], ukulele: [0, 0, 0, 3], piano: [0, 4, 7] },
     "C_minor": { guitar: ["x", 3, 5, 5, 4, 3], charango: [5, 3, 3, 3, 3], ukulele: [5, 3, 3, 3], piano: [0, 3, 7] },
@@ -65,7 +65,6 @@ const activeSectionIndicator = document.getElementById("active-section-indicator
 const currentActiveSectionName = document.getElementById("current-active-section-name");
 const btnFloatingExitLive = document.getElementById("btn-floating-exit-live");
 
-// PANTALLA COMPLETA
 function launchFullScreen(element) {
     if (element.requestFullscreen) element.requestFullscreen();
     else if (element.webkitRequestFullscreen) element.webkitRequestFullscreen();
@@ -74,31 +73,36 @@ function launchFullScreen(element) {
 
 document.addEventListener("DOMContentLoaded", () => {
     setTimeout(() => {
-        splashScreen.classList.add("hidden");
-        if (currentUser) showApp(); else authScreen.classList.remove("hidden");
-    }, 1500);
+        if (splashScreen) splashScreen.classList.add("hidden");
+        if (currentUser) {
+            showApp();
+        } else {
+            if (authScreen) authScreen.classList.remove("hidden");
+        }
+    }, 1200);
 
     setupRealtimeListeners();
     setupUIEventListeners();
 });
 
 function showApp() {
-    appScreen.classList.remove("hidden");
-    displayUserName.textContent = currentUser;
+    if (appScreen) appScreen.classList.remove("hidden");
+    if (displayUserName) displayUserName.textContent = currentUser;
 }
 
-btnEnter.addEventListener("click", () => {
-    const val = usernameInput.value.trim();
-    if (val) {
-        currentUser = val;
-        localStorage.setItem("cs_username", currentUser);
-        authScreen.classList.add("hidden");
-        showApp();
-        launchFullScreen(document.documentElement);
-    }
-});
+if (btnEnter) {
+    btnEnter.addEventListener("click", () => {
+        const val = usernameInput.value.trim();
+        if (val) {
+            currentUser = val;
+            localStorage.setItem("cs_username", currentUser);
+            if (authScreen) authScreen.classList.add("hidden");
+            showApp();
+            launchFullScreen(document.documentElement);
+        }
+    });
+}
 
-// ESCUCHADORES DE FIREBASE REALTIME
 function setupRealtimeListeners() {
     onValue(ref(rtdb, 'live'), (snapshot) => {
         const data = snapshot.val();
@@ -107,11 +111,12 @@ function setupRealtimeListeners() {
             isLiveActiveGlobal = data.active;
             updateLiveUIStatus();
             
-            if (data.active && switchFollow.checked && data.currentSongId) {
-                if (currentRole === "Músico") {
+            if (data.active && switchFollow && switchFollow.checked && data.currentSongId) {
+                if (currentRole === "Músico" && mainNav) {
                     mainNav.classList.add("hidden");
-                    document.querySelector('[data-target="section-visor"]').click();
-                    btnFloatingExitLive.classList.remove("hidden");
+                    const viewTrigger = document.querySelector('[data-target="section-visor"]');
+                    if (viewTrigger) viewTrigger.click();
+                    if (btnFloatingExitLive) btnFloatingExitLive.classList.remove("hidden");
                 }
                 if (!currentSelectedSong || currentSelectedSong.id !== data.currentSongId) {
                     currentSelectedSong = globalSongs[data.currentSongId];
@@ -119,9 +124,9 @@ function setupRealtimeListeners() {
                 }
                 highlightActiveLiveChord(data.currentSectionIndex, data.currentChordIndex);
             } else {
-                if (currentRole === "Músico") {
+                if (currentRole === "Músico" && mainNav) {
                     mainNav.classList.remove("hidden");
-                    btnFloatingExitLive.classList.add("hidden");
+                    if (btnFloatingExitLive) btnFloatingExitLive.classList.add("hidden");
                 }
             }
         }
@@ -144,42 +149,46 @@ function setupRealtimeListeners() {
 
 function updateLiveUIStatus() {
     if (liveState.active) {
-        liveBanner.classList.remove("hidden");
-        liveDirectorName.textContent = liveState.director;
+        if (liveBanner) liveBanner.classList.remove("hidden");
+        if (liveDirectorName) liveDirectorName.textContent = liveState.director;
         if (liveState.director === currentUser) {
-            btnLiveToggle.classList.add("active");
-            btnLiveToggle.textContent = "⏹ STOP LIVE";
+            if (btnLiveToggle) {
+                btnLiveToggle.classList.add("active");
+                btnLiveToggle.textContent = "⏹ STOP LIVE";
+            }
             currentRole = "Director";
-            mainNav.classList.remove("hidden");
+            if (mainNav) mainNav.classList.remove("hidden");
         } else {
-            btnLiveToggle.classList.remove("active");
-            btnLiveToggle.textContent = "🔴 LIVE";
+            if (btnLiveToggle) {
+                btnLiveToggle.classList.remove("active");
+                btnLiveToggle.textContent = "🔴 LIVE";
+            }
             currentRole = "Músico";
         }
     } else {
-        liveBanner.classList.add("hidden");
-        btnLiveToggle.classList.remove("active");
-        btnLiveToggle.textContent = "🔴 LIVE";
+        if (liveBanner) liveBanner.classList.add("hidden");
+        if (btnLiveToggle) {
+            btnLiveToggle.classList.remove("active");
+            btnLiveToggle.textContent = "🔴 LIVE";
+        }
         currentRole = "Músico";
-        mainNav.classList.remove("hidden");
-        btnFloatingExitLive.classList.add("hidden");
+        if (mainNav) mainNav.classList.remove("hidden");
+        if (btnFloatingExitLive) btnFloatingExitLive.classList.add("hidden");
     }
 }
 
-// SOLUCIÓN INTEGRAL AL MAPEO DE EVENTOS DE LOS BOTONES DE ACCIÓN
 function setupUIEventListeners() {
-    // Pestanas navegación
     document.querySelectorAll(".nav-link").forEach(link => {
         link.addEventListener("click", (e) => {
             document.querySelectorAll(".nav-link").forEach(l => l.classList.remove("active"));
             document.querySelectorAll(".tab-content").forEach(c => c.classList.add("hidden"));
             e.target.classList.add("active");
-            document.getElementById(e.target.dataset.target).classList.remove("hidden");
+            const targetEl = document.getElementById(e.target.dataset.target);
+            if (targetEl) targetEl.classList.remove("hidden");
             window.scrollTo({ top: 0 });
         });
     });
 
-    // Controladores del Botón de Canciones
     const btnNewSong = document.getElementById("btn-new-song");
     const songFormContainer = document.getElementById("song-form-container");
     const btnCancelSong = document.getElementById("btn-cancel-song");
@@ -188,23 +197,26 @@ function setupUIEventListeners() {
 
     if (btnNewSong) {
         btnNewSong.addEventListener("click", () => {
-            document.getElementById("form-song-id").value = "";
-            songForm.reset();
-            songFormContainer.classList.remove("hidden");
+            const formId = document.getElementById("form-song-id");
+            if (formId) formId.value = "";
+            if (songForm) songForm.reset();
+            if (songFormContainer) songFormContainer.classList.remove("hidden");
         });
     }
 
     if (btnCancelSong) {
-        btnCancelSong.addEventListener("click", () => songFormContainer.classList.add("hidden"));
+        btnCancelSong.addEventListener("click", () => {
+            if (songFormContainer) songFormContainer.classList.add("hidden");
+        });
     }
 
     if (songForm) {
         songForm.addEventListener("submit", (e) => {
             e.preventDefault();
-            const id = document.getElementById("form-song-id").value || push(ref(rtdb, 'songs')).key;
+            const formIdVal = document.getElementById("form-song-id").value;
+            const id = formIdVal || push(ref(rtdb, 'songs')).key;
             const rawChords = document.getElementById("form-raw-chords").value;
             
-            // Re-procesado local estricto para asegurar match con DB
             const sections = parseChordsInput(rawChords);
 
             const songData = {
@@ -218,11 +230,11 @@ function setupUIEventListeners() {
                 sections: sections
             };
 
-            set(ref(rtdb, `songs/${id}`), songData)
+            saveSong(songData)
                 .then(() => {
-                    songFormContainer.classList.add("hidden");
+                    if (songFormContainer) songFormContainer.classList.add("hidden");
                     songForm.reset();
-                }).catch(err => alert("Error al guardar canción: " + err.message));
+                }).catch(err => alert("Error: " + err.message));
         });
     }
 
@@ -230,7 +242,6 @@ function setupUIEventListeners() {
         searchSong.addEventListener("input", () => renderSongsList(globalSongs));
     }
 
-    // Controladores del Botón de Repertorios
     const btnCreateRepertoire = document.getElementById("btn-create-repertoire");
     const newRepertoireName = document.getElementById("new-repertoire-name");
 
@@ -239,13 +250,12 @@ function setupUIEventListeners() {
             const name = newRepertoireName.value.trim();
             if (!name) return;
             const repId = push(ref(rtdb, 'repertoires')).key;
-            set(ref(rtdb, `repertoires/${repId}`), { id: repId, name: name, songs: {} })
+            createRepertoire(repId, name)
                 .then(() => newRepertoireName.value = "")
                 .catch(err => console.error(err));
         });
     }
 
-    // Botones de Live Flotantes
     if (btnLiveToggle) {
         btnLiveToggle.addEventListener("click", () => {
             launchFullScreen(document.documentElement);
@@ -260,7 +270,7 @@ function setupUIEventListeners() {
     if (btnJoinLive) {
         btnJoinLive.addEventListener("click", () => {
             launchFullScreen(document.documentElement);
-            switchFollow.checked = true;
+            if (switchFollow) switchFollow.checked = true;
             if (liveState.currentSongId) {
                 currentSelectedSong = globalSongs[liveState.currentSongId];
                 renderVisorSong();
@@ -271,54 +281,15 @@ function setupUIEventListeners() {
 
     if (btnFloatingExitLive) {
         btnFloatingExitLive.addEventListener("click", () => {
-            switchFollow.checked = false;
-            mainNav.classList.remove("hidden");
+            if (switchFollow) switchFollow.checked = false;
+            if (mainNav) mainNav.classList.remove("hidden");
             btnFloatingExitLive.classList.add("hidden");
             document.querySelectorAll(".chord-box").forEach(b => b.classList.remove("active-chord"));
-            activeSectionIndicator.classList.add("hidden");
+            if (activeSectionIndicator) activeSectionIndicator.classList.add("hidden");
         });
     }
 }
 
-// PARSEADOR INTELIGENTE INYECTADO ADAPTADO A CHORDS-DB.JS
-export function parseChordsInput(rawText) {
-    const lines = rawText.split('\n');
-    const sections = [];
-    let currentSection = { name: "INTRO", chords: [] };
-
-    lines.forEach(line => {
-        const tokens = line.trim().split(/\s+/);
-        tokens.forEach(token => {
-            if (!token) return;
-            if (token.startsWith(':')) {
-                if (currentSection.chords.length > 0) sections.push(currentSection);
-                currentSection = { name: token.substring(1).toUpperCase(), chords: [] };
-            } else {
-                let cleanToken = token.trim();
-                let standardizedChord = cleanToken;
-
-                // Capturar raíz permitiendo el sostenido real '#' de tu base de datos
-                let isMinor = cleanToken.includes('m') || cleanToken.includes('min') || cleanToken.includes('-');
-                let is7 = cleanToken.includes('7');
-
-                let root = cleanToken.replace(/m|min|7|-/g, '');
-
-                if (isMinor) {
-                    standardizedChord = `${root}_minor`;
-                } else if (is7) {
-                    standardizedChord = `${root}_7`;
-                } else {
-                    standardizedChord = `${root}_major`;
-                }
-                currentSection.chords.push(standardizedChord);
-            }
-        });
-    });
-    if (currentSection.chords.length > 0) sections.push(currentSection);
-    return sections;
-}
-
-// RENDERS DINÁMICOS ASOCIADOS A LOS EVENTOS CORREGIDOS
 function renderSongsList(songsObj) {
     const listContainer = document.getElementById("songs-list");
     if (!listContainer) return;
@@ -341,11 +312,11 @@ function renderSongsList(songsObj) {
         listContainer.appendChild(card);
     });
     
-    // Mapeo dinámico y reactivo de botones de acción por canción
     document.querySelectorAll(".btn-view-song").forEach(b => b.addEventListener("click", (e) => {
         currentSelectedSong = globalSongs[e.target.dataset.id];
         renderVisorSong();
-        document.querySelector('[data-target="section-visor"]').click();
+        const visorTrigger = document.querySelector('[data-target="section-visor"]');
+        if (visorTrigger) visorTrigger.click();
     }));
 
     document.querySelectorAll(".btn-edit-song").forEach(b => b.addEventListener("click", (e) => {
@@ -359,20 +330,22 @@ function renderSongsList(songsObj) {
         document.getElementById("form-signature").value = song.timeSignature || "4/4";
         document.getElementById("form-bpm").value = song.bpm || 80;
 
-        // Re-armar texto plano legible para edición
         let rawTextBuffer = "";
-        song.sections.forEach(sec => {
-            rawTextBuffer += `:${sec.name} ` + sec.chords.map(c => 
-                c.replace("_major", "").replace("_minor", "m").replace("_7", "7")
-            ).join(" ") + "\n";
-        });
+        if (song.sections) {
+            song.sections.forEach(sec => {
+                rawTextBuffer += `:${sec.name} ` + sec.chords.map(c => 
+                    c.replace("_major", "").replace("_minor", "m").replace("_7", "7")
+                ).join(" ") + "\n";
+            });
+        }
         document.getElementById("form-raw-chords").value = rawTextBuffer.trim();
-        document.getElementById("song-form-container").classList.remove("hidden");
+        const container = document.getElementById("song-form-container");
+        if (container) container.classList.remove("hidden");
     }));
 
     document.querySelectorAll(".btn-delete-song").forEach(b => b.addEventListener("click", (e) => {
         if(confirm("¿Seguro que deseas eliminar esta canción de la nube?")) {
-            remove(ref(rtdb, `songs/${e.target.dataset.id}`));
+            deleteSong(e.target.dataset.id);
         }
     }));
 }
@@ -396,14 +369,13 @@ function renderRepertoiresList(repObj) {
 
     document.querySelectorAll(".btn-delete-rep").forEach(b => b.addEventListener("click", (e) => {
         if(confirm("¿Eliminar este repertorio?")) {
-            remove(ref(rtdb, `repertoires/${e.target.dataset.id}`));
+            deleteRepertoire(e.target.dataset.id);
         }
     }));
 }
 
-// GRÁFICOS DE VISUALIZACIÓN FIJADOS EN BASE A TU CHORDS-DB REAL
 function renderVisorSong() {
-    if (!currentSelectedSong) return;
+    if (!currentSelectedSong || !chordsGrid) return;
     
     document.getElementById("visor-title").textContent = currentSelectedSong.title;
     document.getElementById("visor-author-group").textContent = `${currentSelectedSong.author} ${currentSelectedSong.group ? '• ' + currentSelectedSong.group : ''}`;
@@ -412,9 +384,12 @@ function renderVisorSong() {
     document.getElementById("visor-bpm").textContent = currentSelectedSong.bpm;
     
     chordsGrid.innerHTML = "";
-    const selectedInst = selectInstrument.value;
+    const selectedInst = selectInstrument ? selectInstrument.value : "none";
     
+    if (!currentSelectedSong.sections) return;
+
     currentSelectedSong.sections.forEach((section, sIdx) => {
+        if (!section.chords) return;
         section.chords.forEach((chordKey, cIdx) => {
             const box = document.createElement("div");
             box.classList.add("chord-box");
@@ -428,14 +403,12 @@ function renderVisorSong() {
                 box.appendChild(secBadge);
             }
             
-            // Sanitización del nombre visible en pantalla para evitar guiones
             const displayChordName = chordKey.replace("_major", "").replace("_minor", "m").replace("_7", "7");
             const nameEl = document.createElement("div");
             nameEl.classList.add("chord-name");
             nameEl.textContent = displayChordName;
             box.appendChild(nameEl);
             
-            // CARGA DE CUERDAS Y PIANO ASOCIADO A TU ARCHIVO REAL
             if (selectedInst !== "none" && localChordsDB[chordKey]) {
                 const chordData = localChordsDB[chordKey];
                 
@@ -489,7 +462,6 @@ function renderVisorSong() {
                                 dot.style.top = `${calculatedTop}px`;
                                 stringLine.appendChild(dot);
                             }
-                            stringLine.appendChild(stringLine.appendChild(document.createElement("div")));
                             fretboard.appendChild(stringLine);
                         });
                         box.appendChild(fretboard);
@@ -511,7 +483,7 @@ function highlightActiveLiveChord(sIdx, cIdx) {
     document.querySelectorAll(".chord-box").forEach(box => {
         if (parseInt(box.dataset.sectionIndex) === sIdx && parseInt(box.dataset.chordIndex) === cIdx) {
             box.classList.add("active-chord");
-            if (switchFollow.checked) {
+            if (switchFollow && switchFollow.checked) {
                 box.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
         } else {
@@ -519,12 +491,14 @@ function highlightActiveLiveChord(sIdx, cIdx) {
         }
     });
     
-    if (currentSelectedSong?.sections[sIdx]) {
-        activeSectionIndicator.classList.remove("hidden");
-        currentActiveSectionName.textContent = currentSelectedSong.sections[sIdx].name;
+    if (currentSelectedSong?.sections?.[sIdx]) {
+        if (activeSectionIndicator) activeSectionIndicator.classList.remove("hidden");
+        if (currentActiveSectionName) currentActiveSectionName.textContent = currentSelectedSong.sections[sIdx].name;
     } else {
-        activeSectionIndicator.classList.add("hidden");
+        if (activeSectionIndicator) activeSectionIndicator.classList.add("hidden");
     }
 }
 
-selectInstrument.addEventListener("change", renderVisorSong);
+if (selectInstrument) {
+    selectInstrument.addEventListener("change", renderVisorSong);
+}
