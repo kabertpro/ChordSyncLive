@@ -1,0 +1,407 @@
+/* ==========================================================================
+   CHORDSYNC LIVE - HOJA DE ESTILOS GENERAL (MODO OSCURO / SCROLL LIBRE)
+   ========================================================================== */
+
+:root {
+    --bg-dark-primary: #0f172a;
+    --bg-dark-secondary: #1e293b;
+    --bg-card: #334155;
+    --text-white: #f8fafc;
+    --text-muted: #94a3b8;
+    --accent-gold: #fbbf24;
+    --danger-red: #ef4444;
+    --primary-blue: #3b82f6;
+}
+
+/* RESET COMPLETO */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* COMPORTAMIENTO DEL BODY: Permite scroll vertical fluido en móviles */
+body {
+    background-color: var(--bg-dark-primary);
+    color: var(--text-white);
+    min-height: 100vh;
+    width: 100%;
+}
+
+/* CONTENEDORES INICIALES FIJOS (Splash y Pantalla de Autenticación) */
+.screen {
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 10000;
+    background-color: var(--bg-dark-primary);
+}
+
+.flex-center { 
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+    flex-direction: column; 
+}
+
+.hidden { 
+    display: none !important; 
+}
+
+/* CONTENEDOR PRINCIPAL DE LA APP (Ajustado para Scroll Libre en Pantalla Completa) */
+.app-scroll-container {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ESTILOS DEL SPLASH SCREEN */
+#splash-screen { 
+    background-color: #0b0f19; 
+    z-index: 99999; 
+}
+.app-icon-placeholder { 
+    font-size: 4rem; 
+    margin-bottom: 15px; 
+    animation: pulse-icon 2s infinite alternate; 
+}
+.splash-title { 
+    font-size: 2.2rem; 
+    color: #fff; 
+    font-weight: 800; 
+    margin-bottom: 5px; 
+}
+.splash-creator { 
+    font-size: 0.9rem; 
+    color: var(--text-muted); 
+    margin-bottom: 30px; 
+}
+.splash-loader { 
+    width: 40px; 
+    height: 40px; 
+    border: 4px solid rgba(255, 255, 255, 0.1); 
+    border-top-color: var(--accent-gold); 
+    border-radius: 50%; 
+    margin: 0 auto; 
+    animation: spin 1s linear infinite; 
+}
+
+/* BOTONES GENERALES */
+.btn { 
+    padding: 12px 18px; 
+    border: none; 
+    border-radius: 8px; 
+    font-weight: 600; 
+    cursor: pointer; 
+    font-size: 0.9rem; 
+    transition: all 0.2s ease;
+}
+.btn-primary { background-color: var(--primary-blue); color: white; }
+.btn-secondary { background-color: var(--bg-card); color: var(--text-white); }
+.btn-danger { background-color: var(--danger-red); color: white; }
+.btn-accent { background-color: var(--accent-gold); color: #000; }
+.btn-sm { padding: 6px 12px; font-size: 0.8rem; border-radius: 6px; }
+
+/* PANTALLA DE LOGUEO (AUTH) */
+.auth-box { 
+    background-color: var(--bg-dark-secondary); 
+    padding: 32px 24px; 
+    border-radius: 16px; 
+    width: 90%; 
+    max-width: 380px; 
+    text-align: center; 
+    box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+}
+.auth-box h2 { margin-bottom: 8px; font-size: 1.5rem; }
+.auth-box p { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 20px; }
+.auth-box input { 
+    width: 100%; 
+    padding: 12px; 
+    border-radius: 8px; 
+    border: 1px solid var(--bg-card); 
+    background: var(--bg-dark-primary); 
+    color: white; 
+    margin-bottom: 16px; 
+    font-size: 1rem; 
+    text-align: center; 
+}
+.auth-box input:focus { border-color: var(--primary-blue); outline: none; }
+
+/* CABECERA (MAIN HEADER) - No es fija, se desliza al bajar */
+.main-header {
+    background-color: var(--bg-dark-secondary);
+    padding: 14px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.user-badge { 
+    font-size: 0.8rem; 
+    color: var(--accent-gold); 
+    background: rgba(251, 191, 36, 0.1); 
+    padding: 5px 12px; 
+    border-radius: 20px; 
+    font-weight: 600; 
+}
+.live-status-container { display: flex; align-items: center; gap: 8px; }
+.live-banner { 
+    background: rgba(239, 68, 68, 0.15); 
+    border: 1px solid var(--danger-red); 
+    padding: 6px 12px; 
+    border-radius: 8px; 
+    font-size: 0.8rem; 
+    display: flex; 
+    align-items: center; 
+    gap: 6px; 
+}
+.pulse-dot { width: 8px; height: 8px; background-color: var(--danger-red); border-radius: 50%; animation: pulse 0.8s infinite alternate; }
+
+/* NAVEGACIÓN POR PESTAÑAS - Se oculta en modo LIVE para Músicos */
+.main-nav { 
+    display: flex; 
+    background-color: var(--bg-dark-secondary); 
+    border-bottom: 1px solid rgba(0,0,0,0.2); 
+}
+.nav-link { 
+    flex: 1; 
+    background: none; 
+    border: none; 
+    color: var(--text-muted); 
+    padding: 14px 0; 
+    cursor: pointer; 
+    font-size: 0.9rem; 
+    font-weight: 500; 
+    border-bottom: 3px solid transparent; 
+}
+.nav-link.active { 
+    color: var(--text-white); 
+    border-bottom-color: var(--primary-blue); 
+    font-weight: 700; 
+}
+
+/* ÁREA DE CONTENIDOS COMPARTIDA */
+.content-area { width: 100%; }
+.tab-content { padding: 12px; display: flex; flex-direction: column; width: 100%; }
+
+/* CONTROLES DEL VISOR */
+.visor-controls { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    background: var(--bg-dark-secondary); 
+    padding: 12px; 
+    border-radius: 10px; 
+    margin-bottom: 12px; 
+}
+.control-group { display: flex; align-items: center; gap: 6px; font-size: 0.85rem; color: var(--text-muted); }
+.control-group select { background: var(--bg-dark-primary); color: white; border: 1px solid var(--bg-card); padding: 6px 12px; border-radius: 6px; }
+
+/* INDICADOR DE SECCIÓN ACTIVA EN PANTALLA */
+.active-section-indicator { 
+    background: rgba(59, 130, 246, 0.15); 
+    border: 1px solid var(--primary-blue); 
+    color: #60a5fa; 
+    padding: 10px; 
+    border-radius: 8px; 
+    text-align: center; 
+    font-weight: 700; 
+    margin-bottom: 12px; 
+    font-size: 0.85rem; 
+}
+
+/* LIENZO O LIENZO DE LA CANCIÓN */
+.visor-canvas { 
+    background-color: #090d16; 
+    border: 1px solid rgba(255,255,255,0.03); 
+    border-radius: 12px; 
+    padding: 16px; 
+    width: 100%; 
+}
+.song-meta-header { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: flex-start; 
+    border-bottom: 1px solid var(--bg-dark-secondary); 
+    padding-bottom: 12px; 
+    margin-bottom: 16px; 
+}
+.song-meta-header h1 { font-size: 1.4rem; font-weight: 700; color: white; }
+.song-meta-header h3 { font-size: 0.9rem; color: var(--text-muted); font-weight: 400; }
+.music-specs { text-align: right; font-size: 0.8rem; color: var(--text-muted); line-height: 1.5; }
+.music-specs span { color: var(--accent-gold); font-weight: 600; }
+
+/* CUADRÍCULA ESTRICTA DE ACORDES */
+.chords-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    width: 100%;
+}
+
+/* CASILLERO O TARJETA DE ACORDE */
+.chord-box {
+    background: var(--bg-dark-secondary);
+    border: 1px solid rgba(255,255,255,0.02);
+    border-radius: 10px;
+    padding: 18px 4px 8px 4px; /* Mayor espacio superior para que la etiqueta respire */
+    text-align: center;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    min-height: 115px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    transition: all 0.2s ease;
+}
+
+/* LÍNEA DE DETECCIÓN VISUAL: Resalta cambios de estrofa o sección */
+.chord-box:has(.chord-section-header) {
+    border-left: 4px solid var(--accent-gold);
+    border-top-left-radius: 4px;
+    border-bottom-left-radius: 4px;
+    padding-left: 2px;
+}
+
+/* ETIQUETA DE LA SECCIÓN (INTRO, ESTROFA, CORO) */
+.chord-section-header { 
+    position: absolute; 
+    top: -8px; 
+    left: 8px; 
+    background: var(--accent-gold); 
+    color: #000; 
+    font-size: 0.6rem; 
+    padding: 2px 8px; 
+    border-radius: 4px; 
+    font-weight: 800; 
+    text-transform: uppercase; 
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    z-index: 10;
+}
+
+.chord-name { 
+    font-size: 1.35rem; 
+    font-weight: bold; 
+    color: white; 
+    margin-bottom: 6px; 
+}
+
+/* MINI GRÁFICO PARA CUERDAS (Guitarra, Charango, Ukelele) */
+.fretboard-mini {
+    display: flex;
+    justify-content: center;
+    gap: 5px;
+    background: rgba(0, 0, 0, 0.4);
+    padding: 6px;
+    border-radius: 6px;
+    width: 95%;
+}
+.string-line {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    width: 8px;
+    height: 42px;
+    background: linear-gradient(to right, transparent 3px, #64748b 3px, #64748b 5px, transparent 5px);
+}
+.string-fret-dot {
+    position: absolute;
+    width: 7px;
+    height: 7px;
+    background-color: var(--accent-gold);
+    border-radius: 50%;
+}
+.string-fret-open { font-size: 0.65rem; color: #10b981; font-weight: 700; }
+.string-fret-mute { font-size: 0.65rem; color: var(--danger-red); font-weight: 700; }
+
+/* MINI GRÁFICO PARA TECLADOS (Piano) */
+.piano-mini {
+    position: relative;
+    width: 72px;
+    height: 36px;
+    background: #000;
+    border-radius: 4px;
+    display: flex;
+    padding: 0 1px;
+}
+.piano-key-white { flex: 1; background: #ffffff; border-right: 1px solid #cbd5e1; height: 100%; }
+.piano-key-white:last-child { border-right: none; }
+.piano-key-black { position: absolute; background: #1e293b; width: 6px; height: 60%; z-index: 10; }
+
+/* Posicionamiento exacto de teclas negras */
+.piano-key-black.k-1 { left: 8px; }
+.piano-key-black.k-3 { left: 18px; }
+.piano-key-black.k-6 { left: 38px; }
+.piano-key-black.k-8 { left: 48px; }
+.piano-key-black.k-10 { left: 58px; }
+
+/* COMPORTAMIENTO DURANTE LA TRANSMISIÓN EN VIVO */
+.piano-key-white.active-key, .piano-key-black.active-key { 
+    background: var(--accent-gold) !important; 
+}
+.chord-box.active-chord { 
+    background: #2c240e; 
+    border-color: var(--accent-gold); 
+    box-shadow: 0 0 15px rgba(251, 191, 38, 0.4); 
+    transform: scale(1.02);
+}
+.chord-box.active-chord .chord-name { 
+    color: var(--accent-gold); 
+}
+
+/* BOTÓN FLOTANTE: Único elemento fijo en pantalla (Músico en LIVE) */
+.btn-floating-exit {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background-color: var(--danger-red);
+    color: white;
+    border: none;
+    padding: 14px 22px;
+    border-radius: 50px;
+    font-weight: 700;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.5);
+    z-index: 999999;
+    cursor: pointer;
+}
+
+/* TARJETAS DE LISTADOS (Canciones / Repertorios) */
+.item-card { 
+    background: var(--bg-dark-secondary); 
+    padding: 14px; 
+    border-radius: 10px; 
+    margin-bottom: 8px; 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+}
+.item-info h4 { font-size: 1rem; color: #fff; }
+.item-info p { font-size: 0.8rem; color: var(--text-muted); }
+.item-actions { display: flex; gap: 6px; }
+
+/* SECCIÓN FORMULARIOS */
+.section-action-header { display: flex; gap: 10px; margin-bottom: 12px; }
+.section-action-header input { flex: 1; padding: 10px; border-radius: 6px; border: 1px solid var(--bg-card); background: var(--bg-dark-secondary); color: white; }
+.form-container { background: var(--bg-dark-secondary); padding: 16px; border-radius: 12px; margin-top: 10px; }
+.form-container h2 { font-size: 1.2rem; margin-bottom: 12px; }
+.form-row { margin-bottom: 10px; display: flex; gap: 8px; }
+.form-row input, .form-container textarea { width: 100%; padding: 10px; border-radius: 6px; border: 1px solid var(--bg-card); background: var(--bg-dark-primary); color: white; }
+
+/* RESPONSIVE: Computadoras y Tablets */
+@media (min-width: 768px) { 
+    .chords-grid { grid-template-columns: repeat(8, 1fr); } 
+}
+
+/* ANIMACIONES */
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes pulse-icon { from { transform: scale(1); opacity: 0.8; } to { transform: scale(1.1); opacity: 1; } }
+@keyframes pulse { from { opacity: 1; } to { opacity: 0.3; } }
