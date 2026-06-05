@@ -1,9 +1,8 @@
-import { rtdb, ref, onValue, set, push, remove } from "./firebase.js";
-import { saveSong, deleteSong, parseChordsInput } from "./songs.js";
-import { createRepertoire, deleteRepertoire } from "./repertoire.js";
-import { toggleLiveState, updateLiveNavigation } from "./live.js";
+import { rtdb, ref, onValue, set, push } from "./firebase.js";
 
-// BASE DE DATOS REAL COPIADA EXACTAMENTE DE TU ARCHIVO
+// ==========================================================================
+// BASE DE DATOS LOCAL DE ACORDES (Sincronizada con chords-db.js)
+// ==========================================================================
 const localChordsDB = {
     "C_major": { guitar: ["x", 3, 2, 0, 1, 0], charango: [0, 0, 0, 3, 0], ukulele: [0, 0, 0, 3], piano: [0, 4, 7] },
     "C_minor": { guitar: ["x", 3, 5, 5, 4, 3], charango: [5, 3, 3, 3, 3], ukulele: [5, 3, 3, 3], piano: [0, 3, 7] },
@@ -37,7 +36,7 @@ const localChordsDB = {
     "B_minor": { guitar: ["x", 2, 4, 4, 3, 2], charango: [4, 2, 2, 2, 2], ukulele: [4, 2, 2, 2], piano: [11, 14, 18] }
 };
 
-// ESTADO GLOBAL LOCAL
+// ESTADO GLOBAL
 let currentUser = localStorage.getItem("cs_username") || "";
 let currentRole = "Músico";
 let isLiveActiveGlobal = false;
@@ -46,7 +45,7 @@ let globalRepertoires = {};
 let currentSelectedSong = null;
 let liveState = { active: false, director: "", currentSongId: "", currentSectionIndex: -1, currentChordIndex: -1 };
 
-// ELEMENTOS DOM
+// ELEMENTOS DEL DOM
 const splashScreen = document.getElementById("splash-screen");
 const authScreen = document.getElementById("auth-screen");
 const appScreen = document.getElementById("app-screen");
@@ -66,12 +65,52 @@ const currentActiveSectionName = document.getElementById("current-active-section
 const btnFloatingExitLive = document.getElementById("btn-floating-exit-live");
 
 function launchFullScreen(element) {
-    if (element.requestFullscreen) element.requestFullscreen();
-    else if (element.webkitRequestFullscreen) element.webkitRequestFullscreen();
-    else if (element.mozRequestFullScreen) element.mozRequestFullScreen();
+    if (element && element.requestFullscreen) element.requestFullscreen();
 }
 
+// PARSEADOR INTEGRADO DIRECTAMENTE
+function parseChordsInputLocal(rawText) {
+    if (!rawText) return [];
+    const lines = rawText.split('\n');
+    const sections = [];
+    let currentSection = { name: "INTRO", chords: [] };
+
+    lines.forEach(line => {
+        const tokens = line.trim().split(/\s+/);
+        tokens.forEach(token => {
+            if (!token) return;
+            if (token.startsWith(':')) {
+                if (currentSection.chords.length > 0) sections.push(currentSection);
+                currentSection = { name: token.substring(1).toUpperCase(), chords: [] };
+            } else {
+                let cleanToken = token.trim();
+                let standardizedChord = cleanToken;
+                let isMinor = cleanToken.includes('m') || cleanToken.includes('min') || cleanToken.includes('-');
+                let is7 = cleanToken.includes('7');
+                let root = cleanToken.replace(/m|min|7|-/g, '');
+
+                if (isMinor) standardizedChord = `${root}_minor`;
+                else if (is7) standardizedChord = `${root}_7`;
+                else standardizedChord = `${root}_major`;
+
+                currentSection.chords.push(standardizedChord);
+            }
+        });
+    });
+    if (currentSection.chords.length > 0) sections.push(currentSection);
+    return sections;
+}
+
+// FLUJO DE INICIALIZACIÓN PROTEGIDO CONTRA CRASHES
 document.addEventListener("DOMContentLoaded", () => {
+    try {
+        setupRealtimeListeners();
+        setupUIEventListeners();
+    } catch (err) {
+        console.error("Error inicializando componentes internos: ", err);
+    }
+
+    // Blindaje del Splash Screen: Se ocultará pase lo que pase transcurrido el tiempo
     setTimeout(() => {
         if (splashScreen) splashScreen.classList.add("hidden");
         if (currentUser) {
@@ -80,9 +119,6 @@ document.addEventListener("DOMContentLoaded", () => {
             if (authScreen) authScreen.classList.remove("hidden");
         }
     }, 1200);
-
-    setupRealtimeListeners();
-    setupUIEventListeners();
 });
 
 function showApp() {
@@ -217,7 +253,7 @@ function setupUIEventListeners() {
             const id = formIdVal || push(ref(rtdb, 'songs')).key;
             const rawChords = document.getElementById("form-raw-chords").value;
             
-            const sections = parseChordsInput(rawChords);
+            const sections = parseChordsInputLocal(rawChords);
 
             const songData = {
                 id: id,
@@ -230,11 +266,11 @@ function setupUIEventListeners() {
                 sections: sections
             };
 
-            saveSong(songData)
+            set(ref(rtdb, `songs/${id}`), songData)
                 .then(() => {
                     if (songFormContainer) songFormContainer.classList.add("hidden");
                     songForm.reset();
-                }).catch(err => alert("Error: " + err.message));
+                }).catch(err => alert("Error al guardar: " + err.message));
         });
     }
 
@@ -250,7 +286,7 @@ function setupUIEventListeners() {
             const name = newRepertoireName.value.trim();
             if (!name) return;
             const repId = push(ref(rtdb, 'repertoires')).key;
-            createRepertoire(repId, name)
+            set(ref(rtdb, `repertoires/${repId}`), { id: repId, name: name, songs: {} })
                 .then(() => newRepertoireName.value = "")
                 .catch(err => console.error(err));
         });
@@ -259,11 +295,14 @@ function setupUIEventListeners() {
     if (btnLiveToggle) {
         btnLiveToggle.addEventListener("click", () => {
             launchFullScreen(document.documentElement);
-            if (liveState.active && liveState.director === currentUser) {
-                toggleLiveState(false, "");
-            } else {
-                toggleLiveState(true, currentUser);
-            }
+            const nextActiveState = !(liveState.active && liveState.director === currentUser);
+            set(ref(rtdb, 'live'), {
+                active: nextActiveState,
+                director: nextActiveState ? currentUser : "",
+                currentSongId: nextActiveState ? (currentSelectedSong ? currentSelectedSong.id : "") : "",
+                currentSectionIndex: -1,
+                currentChordIndex: -1
+            });
         });
     }
 
@@ -344,8 +383,9 @@ function renderSongsList(songsObj) {
     }));
 
     document.querySelectorAll(".btn-delete-song").forEach(b => b.addEventListener("click", (e) => {
-        if(confirm("¿Seguro que deseas eliminar esta canción de la nube?")) {
-            deleteSong(e.target.dataset.id);
+        if(confirm("¿Seguro que deseas eliminar esta canción?")) {
+            // Reemplazo seguro de remove() estableciendo null en la referencia
+            set(ref(rtdb, `songs/${e.target.dataset.id}`), null);
         }
     }));
 }
@@ -369,7 +409,8 @@ function renderRepertoiresList(repObj) {
 
     document.querySelectorAll(".btn-delete-rep").forEach(b => b.addEventListener("click", (e) => {
         if(confirm("¿Eliminar este repertorio?")) {
-            deleteRepertoire(e.target.dataset.id);
+            // Reemplazo seguro de remove() estableciendo null en la referencia
+            set(ref(rtdb, `repertoires/${e.target.dataset.id}`), null);
         }
     }));
 }
@@ -471,7 +512,13 @@ function renderVisorSong() {
             
             box.addEventListener("click", () => {
                 if (currentRole === "Director" && isLiveActiveGlobal) {
-                    updateLiveNavigation(currentSelectedSong.id, sIdx, cIdx);
+                    set(ref(rtdb, 'live'), {
+                        active: true,
+                        director: currentUser,
+                        currentSongId: currentSelectedSong.id,
+                        currentSectionIndex: sIdx,
+                        currentChordIndex: cIdx
+                    });
                 }
             });
             chordsGrid.appendChild(box);
