@@ -1,35 +1,52 @@
-import { rtdb, ref, onValue } from "./firebase.js";
-import { saveSong, deleteSong, parseChordsInput, checkAndInitSongsSeed } from "./songs.js";
+import { rtdb, ref, onValue, set, push, remove } from "./firebase.js";
+import { saveSong, deleteSong, parseChordsInput } from "./songs.js";
 import { createRepertoire, deleteRepertoire } from "./repertoire.js";
 import { toggleLiveState, updateLiveNavigation } from "./live.js";
 
-// INYECCIÓN INTERNA DIRECTA DE TU BASE DE DATOS PARA EVITAR ERRORES DE ASINCRONÍA
+// BASE DE DATOS REAL COPIADA EXACTAMENTE DE TU ARCHIVO (Mantenida local para velocidad)
 const localChordsDB = {
     "C_major": { guitar: ["x", 3, 2, 0, 1, 0], charango: [0, 0, 0, 3, 0], ukulele: [0, 0, 0, 3], piano: [0, 4, 7] },
     "C_minor": { guitar: ["x", 3, 5, 5, 4, 3], charango: [5, 3, 3, 3, 3], ukulele: [5, 3, 3, 3], piano: [0, 3, 7] },
     "C_7": { guitar: ["x", 3, 2, 3, 1, 0], charango: [0, 0, 0, 1, 0], ukulele: [0, 0, 0, 1], piano: [0, 3, 7] },
-    "D_major": { guitar: ["x", "x", 0, 2, 3, 2], charango: [2, 0, 1, 0, 2], ukulele: [2, 2, 2, 0], piano: [2, 6, 9] },
-    "D_minor": { guitar: ["x", "x", 0, 2, 3, 1], charango: [2, 0, 1, 1, 2], ukulele: [2, 2, 1, 0], piano: [2, 5, 9] },
-    "E_major": { guitar: [0, 2, 2, 1, 0, 0], charango: [4, 4, 3, 2, 0], ukulele: [4, 4, 4, 2], piano: [4, 8, 11] },
+    "C#_major": { guitar: ["x", 4, 3, 1, 2, 1], charango: [1, 1, 1, 4, 1], ukulele: [1, 1, 1, 4], piano: [1, 5, 8] },
+    "C#_minor": { guitar: ["x", 4, 6, 6, 5, 4], charango: [6, 4, 4, 4, 4], ukulele: [6, 4, 4, 4], piano: [1, 4, 8] },
+    "C#_7": { guitar: ["x", 4, 6, 4, 6, 4], charango: [1, 1, 1, 2, 1], ukulele: [1, 1, 1, 2], piano: [1, 5, 8, 11] },
+    "D_major": { guitar: ["x", "x", 0, 2, 3, 2], charango: [2, 2, 2, 0, 2], ukulele: [2, 2, 2, 0], piano: [2, 6, 9] },
+    "D_minor": { guitar: ["x", "x", 0, 2, 3, 1], charango: [2, 2, 1, 0, 1], ukulele: [2, 2, 1, 0], piano: [2, 5, 9] },
+    "D#_major": { guitar: ["x", "x", 1, 3, 2, 3], charango: [0, 3, 3, 1, 3], ukulele: [0, 0, 0, 1], piano: [3, 7, 10] },
+    "D#_minor": { guitar: ["x", "x", 1, 3, 4, 2], charango: [2, 2, 1, 0, 1], ukulele: [2, 2, 1, 0], piano: [3, 6, 10] },
+    "D#_7": { guitar: ["x", 6, 8, 6, 8, 6], charango: [3, 1, 3, 1, 3], ukulele: [3, 1, 3, 1], piano: [3, 7, 10, 1] },
+    "E_major": { guitar: [0, 2, 2, 1, 0, 0], charango: [4, 4, 4, 2, 0], ukulele: [4, 4, 4, 2], piano: [4, 8, 11] },
     "E_minor": { guitar: [0, 2, 2, 0, 0, 0], charango: [0, 4, 3, 2, 0], ukulele: [0, 4, 3, 2], piano: [4, 7, 11] },
-    "F_major": { guitar: [1, 3, 3, 2, 1, 1], charango: [0, 1, 0, 3, 0], ukulele: [2, 0, 1, 0], piano: [5, 9, 12] },
+    "F_major": { guitar: [1, 3, 3, 2, 1, 1], charango: [2, 0, 1, 0, 5], ukulele: [2, 0, 1, 0], piano: [5, 9, 12] },
+    "F_minor": { guitar: [1, 3, 3, 1, 1, 1], charango: [1, 0, 1, 3, 1], ukulele: [1, 0, 1, 3], piano: [5, 9, 12] },
+    "F#_major": { guitar: [2, 4, 4, 3, 2, 2], charango: [0, 1, 2, 1, 2], ukulele: [0, 1, 2, 1], piano: [6, 10, 13] },
+    "F#_minor": { guitar: [2, 4, 4, 2, 2, 2], charango: [2, 1, 2, 0, 2], ukulele: [2, 1, 2, 0], piano: [6, 9, 13] },
+    "F#_7": { guitar: [2, 4, 2, 3, 2, 2], charango: [4, 4, 4, 4, 2], ukulele: [3, 4, 2, 4], piano: [6, 10, 13, 4] },
     "G_major": { guitar: [3, 2, 0, 0, 0, 3], charango: [0, 2, 3, 2, 3], ukulele: [0, 2, 3, 2], piano: [7, 11, 14] },
-    "G_minor": { guitar: [3, 5, 5, 3, 3, 3], charango: [0, 2, 3, 1, 3], ukulele: [0, 2, 3, 1], piano: [7, 10, 14] },
-    "A_major": { guitar: ["x", 0, 2, 2, 2, 0], charango: [2, 1, 0, 0, 2], ukulele: [2, 1, 0, 0], piano: [9, 13, 16] },
-    "A_minor": { guitar: ["x", 0, 2, 2, 1, 0], charango: [2, 0, 0, 0, 2], ukulele: [2, 0, 0, 0], piano: [9, 12, 16] },
-    "B_major": { guitar: ["x", 2, 4, 4, 4, 2], charango: [4, 2, 2, 2, 4], ukulele: [4, 3, 2, 2], piano: [11, 15, 18] },
-    "B_minor": { guitar: ["x", 2, 4, 4, 3, 2], charango: [4, 2, 2, 1, 4], ukulele: [4, 2, 2, 2], piano: [11, 14, 18] }
+    "G_minor": { guitar: [3, 5, 5, 3, 3, 3], charango: [0, 2, 3, 1, 3], ukulele: [0, 2, 3, 1], piano: [7, 11, 14] },
+    "G#_major": { guitar: [4, 6, 6, 5, 4, 4], charango: [0, 3, 4, 3, 2], ukulele: [0, 3, 4, 3], piano: [8, 12, 15] },
+    "G#_minor": { guitar: [4, 6, 6, 4, 4, 4], charango: [1, 3, 4, 2, 0], ukulele: [1, 3, 4, 2], piano: [8, 11, 15] },
+    "G#_7": { guitar: [4, 6, 4, 5, 4, 4], charango: [1, 3, 2, 3, 2], ukulele: [1, 3, 2, 3], piano: [8, 12, 15, 6] },
+    "A_major": { guitar: ["x", 0, 2, 2, 2, 0], charango: [2, 1, 0, 0, 0], ukulele: [2, 1, 0, 0], piano: [9, 13, 16] },
+    "A_minor": { guitar: ["x", 0, 2, 2, 1, 0], charango: [2, 0, 0, 0, 5], ukulele: [2, 0, 0, 0], piano: [9, 12, 16] },
+    "A#_major": { guitar: ["x", 1, 3, 3, 3, 1], charango: [3, 2, 1, 1, 1], ukulele: [3, 2, 1, 1], piano: [10, 14, 17] },
+    "A#_minor": { guitar: ["x", 1, 3, 3, 2, 1], charango: [3, 1, 1, 1, 1], ukulele: [3, 1, 1, 1], piano: [10, 13, 17] },
+    "A#_7": { guitar: ["x", 1, 3, 1, 3, 1], charango: [1, 1, 1, 3, 2], ukulele: [1, 2, 1, 1], piano: [10, 14, 17, 8] },
+    "B_major": { guitar: ["x", 2, 4, 4, 4, 2], charango: [4, 3, 2, 2, 2], ukulele: [4, 3, 2, 2], piano: [11, 15, 18] },
+    "B_minor": { guitar: ["x", 2, 4, 4, 3, 2], charango: [4, 2, 2, 2, 2], ukulele: [4, 2, 2, 2], piano: [11, 14, 18] }
 };
 
-// LOCAL STATE
+// ESTADO GLOBAL LOCAL
 let currentUser = localStorage.getItem("cs_username") || "";
 let currentRole = "Músico";
 let isLiveActiveGlobal = false;
 let globalSongs = {};
+let globalRepertoires = {};
 let currentSelectedSong = null;
 let liveState = { active: false, director: "", currentSongId: "", currentSectionIndex: -1, currentChordIndex: -1 };
 
-// DOM ELEMENTS
+// ELEMENTOS DOM
 const splashScreen = document.getElementById("splash-screen");
 const authScreen = document.getElementById("auth-screen");
 const appScreen = document.getElementById("app-screen");
@@ -48,28 +65,27 @@ const activeSectionIndicator = document.getElementById("active-section-indicator
 const currentActiveSectionName = document.getElementById("current-active-section-name");
 const btnFloatingExitLive = document.getElementById("btn-floating-exit-live");
 
-// FUNCIÓN DE DISPARO DE PANTALLA COMPLETA ABSOLUTA (ANDROID / IOS / CHROME / SAFARI)
+// PANTALLA COMPLETA
 function launchFullScreen(element) {
-    if (element.requestFullscreen) { element.requestFullscreen(); }
-    else if (element.mozRequestFullScreen) { element.mozRequestFullScreen(); }
-    else if (element.webkitRequestFullscreen) { element.webkitRequestFullscreen(); }
-    else if (element.msRequestFullscreen) { element.msRequestFullscreen(); }
+    if (element.requestFullscreen) element.requestFullscreen();
+    else if (element.webkitRequestFullscreen) element.webkitRequestFullscreen();
+    else if (element.mozRequestFullScreen) element.mozRequestFullScreen();
 }
 
 document.addEventListener("DOMContentLoaded", () => {
     setTimeout(() => {
         splashScreen.classList.add("hidden");
-        if (currentUser) {
-            showApp();
-        } else {
-            authScreen.classList.remove("hidden");
-        }
-    }, 2000);
+        if (currentUser) showApp(); else authScreen.classList.remove("hidden");
+    }, 1500);
 
-    checkAndInitSongsSeed();
     setupRealtimeListeners();
     setupUIEventListeners();
 });
+
+function showApp() {
+    appScreen.classList.remove("hidden");
+    displayUserName.textContent = currentUser;
+}
 
 btnEnter.addEventListener("click", () => {
     const val = usernameInput.value.trim();
@@ -78,15 +94,11 @@ btnEnter.addEventListener("click", () => {
         localStorage.setItem("cs_username", currentUser);
         authScreen.classList.add("hidden");
         showApp();
-        launchFullScreen(document.documentElement); // PANTALLA COMPLETA AL HACER CLICK EN ENTRAR
+        launchFullScreen(document.documentElement);
     }
 });
 
-function showApp() {
-    appScreen.classList.remove("hidden");
-    displayUserName.textContent = currentUser;
-}
-
+// ESCUCHADORES DE FIREBASE REALTIME
 function setupRealtimeListeners() {
     onValue(ref(rtdb, 'live'), (snapshot) => {
         const data = snapshot.val();
@@ -97,12 +109,11 @@ function setupRealtimeListeners() {
             
             if (data.active && switchFollow.checked && data.currentSongId) {
                 if (currentRole === "Músico") {
-                    mainNav.classList.add("hidden"); // Oculta navegación de forma estricta
-                    document.querySelector('[data-target="section-visor"]').click(); 
-                    btnFloatingExitLive.classList.remove("hidden"); 
+                    mainNav.classList.add("hidden");
+                    document.querySelector('[data-target="section-visor"]').click();
+                    btnFloatingExitLive.classList.remove("hidden");
                 }
-                
-                if (currentSelectedSong?.id !== data.currentSongId) {
+                if (!currentSelectedSong || currentSelectedSong.id !== data.currentSongId) {
                     currentSelectedSong = globalSongs[data.currentSongId];
                     renderVisorSong();
                 }
@@ -124,19 +135,22 @@ function setupRealtimeListeners() {
             renderVisorSong();
         }
     });
+
+    onValue(ref(rtdb, 'repertoires'), (snapshot) => {
+        globalRepertoires = snapshot.val() || {};
+        renderRepertoiresList(globalRepertoires);
+    });
 }
 
 function updateLiveUIStatus() {
     if (liveState.active) {
         liveBanner.classList.remove("hidden");
         liveDirectorName.textContent = liveState.director;
-        
         if (liveState.director === currentUser) {
             btnLiveToggle.classList.add("active");
             btnLiveToggle.textContent = "⏹ STOP LIVE";
             currentRole = "Director";
-            mainNav.classList.remove("hidden"); 
-            btnFloatingExitLive.classList.add("hidden");
+            mainNav.classList.remove("hidden");
         } else {
             btnLiveToggle.classList.remove("active");
             btnLiveToggle.textContent = "🔴 LIVE";
@@ -152,44 +166,242 @@ function updateLiveUIStatus() {
     }
 }
 
-btnFloatingExitLive.addEventListener("click", () => {
-    switchFollow.checked = false; 
-    mainNav.classList.remove("hidden"); 
-    btnFloatingExitLive.classList.add("hidden");
-    document.querySelectorAll(".chord-box").forEach(box => box.classList.remove("active-chord"));
-    activeSectionIndicator.classList.add("hidden");
-});
-
-btnLiveToggle.addEventListener("click", () => {
-    launchFullScreen(document.documentElement); // Asegura pantalla completa al iniciar live
-    if (liveState.active && liveState.director === currentUser) {
-        toggleLiveState(false, "");
-    } else {
-        toggleLiveState(true, currentUser);
-    }
-});
-
-btnJoinLive.addEventListener("click", () => {
-    launchFullScreen(document.documentElement); // Asegura pantalla completa al unirse
-    switchFollow.checked = true;
-    if (liveState.currentSongId) {
-        currentSelectedSong = globalSongs[liveState.currentSongId];
-        renderVisorSong();
-        highlightActiveLiveChord(liveState.currentSectionIndex, liveState.currentChordIndex);
-    }
-});
-
-document.querySelectorAll(".nav-link").forEach(link => {
-    link.addEventListener("click", (e) => {
-        document.querySelectorAll(".nav-link").forEach(l => l.classList.remove("active"));
-        document.querySelectorAll(".tab-content").forEach(c => c.classList.add("hidden"));
-        e.target.classList.add("active");
-        document.getElementById(e.target.dataset.target).classList.remove("hidden");
-        window.scrollTo({ top: 0, behavior: 'smooth' }); // Regresar arriba al cambiar de sección
+// SOLUCIÓN INTEGRAL AL MAPEO DE EVENTOS DE LOS BOTONES DE ACCIÓN
+function setupUIEventListeners() {
+    // Pestanas navegación
+    document.querySelectorAll(".nav-link").forEach(link => {
+        link.addEventListener("click", (e) => {
+            document.querySelectorAll(".nav-link").forEach(l => l.classList.remove("active"));
+            document.querySelectorAll(".tab-content").forEach(c => c.classList.add("hidden"));
+            e.target.classList.add("active");
+            document.getElementById(e.target.dataset.target).classList.remove("hidden");
+            window.scrollTo({ top: 0 });
+        });
     });
-});
 
-// INTERFAZ DE RENDERIZADO VISUAL EXTREMADAMENTE SEGURO
+    // Controladores del Botón de Canciones
+    const btnNewSong = document.getElementById("btn-new-song");
+    const songFormContainer = document.getElementById("song-form-container");
+    const btnCancelSong = document.getElementById("btn-cancel-song");
+    const songForm = document.getElementById("song-form");
+    const searchSong = document.getElementById("search-song");
+
+    if (btnNewSong) {
+        btnNewSong.addEventListener("click", () => {
+            document.getElementById("form-song-id").value = "";
+            songForm.reset();
+            songFormContainer.classList.remove("hidden");
+        });
+    }
+
+    if (btnCancelSong) {
+        btnCancelSong.addEventListener("click", () => songFormContainer.classList.add("hidden"));
+    }
+
+    if (songForm) {
+        songForm.addEventListener("submit", (e) => {
+            e.preventDefault();
+            const id = document.getElementById("form-song-id").value || push(ref(rtdb, 'songs')).key;
+            const rawChords = document.getElementById("form-raw-chords").value;
+            
+            // Re-procesado local estricto para asegurar match con DB
+            const sections = parseChordsInput(rawChords);
+
+            const songData = {
+                id: id,
+                title: document.getElementById("form-title").value.trim(),
+                author: document.getElementById("form-author").value.trim(),
+                group: document.getElementById("form-group").value.trim(),
+                key: document.getElementById("form-key").value.trim(),
+                timeSignature: document.getElementById("form-signature").value.trim(),
+                bpm: parseInt(document.getElementById("form-bpm").value) || 80,
+                sections: sections
+            };
+
+            set(ref(rtdb, `songs/${id}`), songData)
+                .then(() => {
+                    songFormContainer.classList.add("hidden");
+                    songForm.reset();
+                }).catch(err => alert("Error al guardar canción: " + err.message));
+        });
+    }
+
+    if (searchSong) {
+        searchSong.addEventListener("input", () => renderSongsList(globalSongs));
+    }
+
+    // Controladores del Botón de Repertorios
+    const btnCreateRepertoire = document.getElementById("btn-create-repertoire");
+    const newRepertoireName = document.getElementById("new-repertoire-name");
+
+    if (btnCreateRepertoire && newRepertoireName) {
+        btnCreateRepertoire.addEventListener("click", () => {
+            const name = newRepertoireName.value.trim();
+            if (!name) return;
+            const repId = push(ref(rtdb, 'repertoires')).key;
+            set(ref(rtdb, `repertoires/${repId}`), { id: repId, name: name, songs: {} })
+                .then(() => newRepertoireName.value = "")
+                .catch(err => console.error(err));
+        });
+    }
+
+    // Botones de Live Flotantes
+    if (btnLiveToggle) {
+        btnLiveToggle.addEventListener("click", () => {
+            launchFullScreen(document.documentElement);
+            if (liveState.active && liveState.director === currentUser) {
+                toggleLiveState(false, "");
+            } else {
+                toggleLiveState(true, currentUser);
+            }
+        });
+    }
+
+    if (btnJoinLive) {
+        btnJoinLive.addEventListener("click", () => {
+            launchFullScreen(document.documentElement);
+            switchFollow.checked = true;
+            if (liveState.currentSongId) {
+                currentSelectedSong = globalSongs[liveState.currentSongId];
+                renderVisorSong();
+                highlightActiveLiveChord(liveState.currentSectionIndex, liveState.currentChordIndex);
+            }
+        });
+    }
+
+    if (btnFloatingExitLive) {
+        btnFloatingExitLive.addEventListener("click", () => {
+            switchFollow.checked = false;
+            mainNav.classList.remove("hidden");
+            btnFloatingExitLive.classList.add("hidden");
+            document.querySelectorAll(".chord-box").forEach(b => b.classList.remove("active-chord"));
+            activeSectionIndicator.classList.add("hidden");
+        });
+    }
+}
+
+// PARSEADOR INTELIGENTE INYECTADO ADAPTADO A CHORDS-DB.JS
+export function parseChordsInput(rawText) {
+    const lines = rawText.split('\n');
+    const sections = [];
+    let currentSection = { name: "INTRO", chords: [] };
+
+    lines.forEach(line => {
+        const tokens = line.trim().split(/\s+/);
+        tokens.forEach(token => {
+            if (!token) return;
+            if (token.startsWith(':')) {
+                if (currentSection.chords.length > 0) sections.push(currentSection);
+                currentSection = { name: token.substring(1).toUpperCase(), chords: [] };
+            } else {
+                let cleanToken = token.trim();
+                let standardizedChord = cleanToken;
+
+                // Capturar raíz permitiendo el sostenido real '#' de tu base de datos
+                let isMinor = cleanToken.includes('m') || cleanToken.includes('min') || cleanToken.includes('-');
+                let is7 = cleanToken.includes('7');
+
+                let root = cleanToken.replace(/m|min|7|-/g, '');
+
+                if (isMinor) {
+                    standardizedChord = `${root}_minor`;
+                } else if (is7) {
+                    standardizedChord = `${root}_7`;
+                } else {
+                    standardizedChord = `${root}_major`;
+                }
+                currentSection.chords.push(standardizedChord);
+            }
+        });
+    });
+    if (currentSection.chords.length > 0) sections.push(currentSection);
+    return sections;
+}
+
+// RENDERS DINÁMICOS ASOCIADOS A LOS EVENTOS CORREGIDOS
+function renderSongsList(songsObj) {
+    const listContainer = document.getElementById("songs-list");
+    if (!listContainer) return;
+    listContainer.innerHTML = "";
+    const filter = document.getElementById("search-song")?.value.toLowerCase() || "";
+    
+    Object.values(songsObj).forEach(song => {
+        if (filter && !song.title.toLowerCase().includes(filter) && !song.author.toLowerCase().includes(filter)) return;
+        
+        const card = document.createElement("div");
+        card.classList.add("item-card");
+        card.innerHTML = `
+            <div class="item-info"><h4>${song.title}</h4><p>${song.author} | Tono: ${song.key}</p></div>
+            <div class="item-actions">
+                <button class="btn btn-accent btn-sm btn-view-song" data-id="${song.id}">Ver</button>
+                <button class="btn btn-secondary btn-sm btn-edit-song" data-id="${song.id}">Editar</button>
+                <button class="btn btn-danger btn-sm btn-delete-song" data-id="${song.id}">Eliminar</button>
+            </div>
+        `;
+        listContainer.appendChild(card);
+    });
+    
+    // Mapeo dinámico y reactivo de botones de acción por canción
+    document.querySelectorAll(".btn-view-song").forEach(b => b.addEventListener("click", (e) => {
+        currentSelectedSong = globalSongs[e.target.dataset.id];
+        renderVisorSong();
+        document.querySelector('[data-target="section-visor"]').click();
+    }));
+
+    document.querySelectorAll(".btn-edit-song").forEach(b => b.addEventListener("click", (e) => {
+        const song = globalSongs[e.target.dataset.id];
+        if(!song) return;
+        document.getElementById("form-song-id").value = song.id;
+        document.getElementById("form-title").value = song.title;
+        document.getElementById("form-author").value = song.author;
+        document.getElementById("form-group").value = song.group || "";
+        document.getElementById("form-key").value = song.key;
+        document.getElementById("form-signature").value = song.timeSignature || "4/4";
+        document.getElementById("form-bpm").value = song.bpm || 80;
+
+        // Re-armar texto plano legible para edición
+        let rawTextBuffer = "";
+        song.sections.forEach(sec => {
+            rawTextBuffer += `:${sec.name} ` + sec.chords.map(c => 
+                c.replace("_major", "").replace("_minor", "m").replace("_7", "7")
+            ).join(" ") + "\n";
+        });
+        document.getElementById("form-raw-chords").value = rawTextBuffer.trim();
+        document.getElementById("song-form-container").classList.remove("hidden");
+    }));
+
+    document.querySelectorAll(".btn-delete-song").forEach(b => b.addEventListener("click", (e) => {
+        if(confirm("¿Seguro que deseas eliminar esta canción de la nube?")) {
+            remove(ref(rtdb, `songs/${e.target.dataset.id}`));
+        }
+    }));
+}
+
+function renderRepertoiresList(repObj) {
+    const listContainer = document.getElementById("repertoires-list");
+    if (!listContainer) return;
+    listContainer.innerHTML = "";
+
+    Object.values(repObj).forEach(rep => {
+        const card = document.createElement("div");
+        card.classList.add("item-card");
+        card.innerHTML = `
+            <div class="item-info"><h4>📂 ${rep.name}</h4><p>Sincronizado en tiempo real</p></div>
+            <div class="item-actions">
+                <button class="btn btn-danger btn-sm btn-delete-rep" data-id="${rep.id}">Eliminar</button>
+            </div>
+        `;
+        listContainer.appendChild(card);
+    });
+
+    document.querySelectorAll(".btn-delete-rep").forEach(b => b.addEventListener("click", (e) => {
+        if(confirm("¿Eliminar este repertorio?")) {
+            remove(ref(rtdb, `repertoires/${e.target.dataset.id}`));
+        }
+    }));
+}
+
+// GRÁFICOS DE VISUALIZACIÓN FIJADOS EN BASE A TU CHORDS-DB REAL
 function renderVisorSong() {
     if (!currentSelectedSong) return;
     
@@ -216,13 +428,14 @@ function renderVisorSong() {
                 box.appendChild(secBadge);
             }
             
-            const cleanName = chordKey.replace("_major", "").replace("_minor", "m").replace("_7", "7").replace("_", " ");
+            // Sanitización del nombre visible en pantalla para evitar guiones
+            const displayChordName = chordKey.replace("_major", "").replace("_minor", "m").replace("_7", "7");
             const nameEl = document.createElement("div");
             nameEl.classList.add("chord-name");
-            nameEl.textContent = cleanName;
+            nameEl.textContent = displayChordName;
             box.appendChild(nameEl);
             
-            // LECTURA DIRECTA DE LA BASE DE DATOS LOCAL SEGURA
+            // CARGA DE CUERDAS Y PIANO ASOCIADO A TU ARCHIVO REAL
             if (selectedInst !== "none" && localChordsDB[chordKey]) {
                 const chordData = localChordsDB[chordKey];
                 
@@ -276,6 +489,7 @@ function renderVisorSong() {
                                 dot.style.top = `${calculatedTop}px`;
                                 stringLine.appendChild(dot);
                             }
+                            stringLine.appendChild(stringLine.appendChild(document.createElement("div")));
                             fretboard.appendChild(stringLine);
                         });
                         box.appendChild(fretboard);
@@ -298,7 +512,6 @@ function highlightActiveLiveChord(sIdx, cIdx) {
         if (parseInt(box.dataset.sectionIndex) === sIdx && parseInt(box.dataset.chordIndex) === cIdx) {
             box.classList.add("active-chord");
             if (switchFollow.checked) {
-                // Scroll nativo centrado hacia el acorde activo
                 box.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
         } else {
@@ -315,40 +528,3 @@ function highlightActiveLiveChord(sIdx, cIdx) {
 }
 
 selectInstrument.addEventListener("change", renderVisorSong);
-
-function renderSongsList(songsObj) {
-    const listContainer = document.getElementById("songs-list");
-    if (!listContainer) return;
-    listContainer.innerHTML = "";
-    const filter = document.getElementById("search-song").value.toLowerCase();
-    
-    Object.values(songsObj).forEach(song => {
-        const matchesSearch = song.title.toLowerCase().includes(filter) || song.author.toLowerCase().includes(filter);
-        if (!matchesSearch) return;
-        
-        const card = document.createElement("div");
-        card.classList.add("item-card");
-        card.innerHTML = `
-            <div class="item-info"><h4>${song.title}</h4><p>${song.author} | Tono: ${song.key}</p></div>
-            <div class="item-actions">
-                <button class="btn btn-accent btn-sm btn-view-song" data-id="${song.id}">Ver</button>
-                <button class="btn btn-secondary btn-sm btn-edit-song" data-id="${song.id}">Editar</button>
-                <button class="btn btn-danger btn-sm btn-delete-song" data-id="${song.id}">Eliminar</button>
-            </div>
-        `;
-        listContainer.appendChild(card);
-    });
-    
-    document.querySelectorAll(".btn-view-song").forEach(b => b.addEventListener("click", (e) => {
-        currentSelectedSong = globalSongs[e.target.dataset.id];
-        renderVisorSong();
-        document.querySelector('[data-target="section-visor"]').click();
-    }));
-}
-
-function setupUIEventListeners() {
-    const searchSong = document.getElementById("search-song");
-    if(searchSong) {
-        searchSong.addEventListener("input", () => renderSongsList(globalSongs));
-    }
-}
